@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OSANI.COM - Admin Inventory Management</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      background-color: #fcf8f7;
+      color: #3d282b;
+    }
+
+    .admin-header {
+      background-color: #3d282b;
+      color: white;
+      padding: 15px 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .admin-header h1 {
+      font-size: 20px;
+      color: #b76e79;
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: 20px auto;
+      padding: 0 20px;
+    }
+
+    .section-box {
+      background: #ffffff;
+      border: 1px solid #e6d3d6;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 2px 8px rgba(183,110,121,0.1);
+    }
+
+    .section-box h3 {
+      font-size: 16px;
+      color: #3d282b;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #f5e4e7;
+      padding-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 10px;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 4px;
+      color: #3d282b;
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #b76e79;
+      border-radius: 4px;
+      font-size: 13px;
+      outline: none;
+      background: #fff;
+    }
+
+    .calc-box {
+      background: #f5e4e7;
+      padding: 8px 10px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: bold;
+      color: #3d282b;
+      margin-top: 4px;
+      border: 1px solid #e6cbd0;
+    }
+
+    .calc-btn {
+      background: #b76e79;
+      color: white;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+    .calc-btn:hover {
+      background: #a35a64;
+    }
+
+    .admin-btn {
+      background-color: #b76e79;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+    .admin-btn:hover {
+      background-color: #a35a64;
+    }
+
+    .reset-btn {
+      background-color: #cc0c39;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .reset-btn:hover {
+      background-color: #a80a2e;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: #fff;
+      font-size: 13px;
+    }
+
+    th, td {
+      border: 1px solid #e6d3d6;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f5e4e7;
+      color: #3d282b;
+    }
+
+    td img {
+      width: 45px;
+      height: 45px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+
+    .delete-btn {
+      background-color: #cc0c39;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      font-size: 11px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .delete-btn:hover {
+      background-color: #a80a2e;
+    }
+
+    .edit-btn {
+      background-color: #2b6cb0;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      font-size: 11px;
+      border-radius: 3px;
+      cursor: pointer;
+      margin-right: 6px;
+    }
+
+    .edit-btn:hover {
+      background-color: #1e4e82;
+    }
+
+    .cancel-edit-btn {
+      background-color: #888;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      font-size: 13px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    .cancel-edit-btn:hover {
+      background-color: #666;
+    }
+
+    .editing-banner {
+      display: none;
+      background: #fff6d6;
+      border: 1px solid #e0c34a;
+      color: #6b5900;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="admin-header">
+    <h1>OSANI.COM - Admin Inventory Control</h1>
+    <a href="index.html" style="color: #f3e6e8; font-size: 13px; text-decoration: underline;">← Back to Website</a>
+  </header>
+
+  <div class="container">
+    
+    <!-- Add New Product Section -->
+    <div class="section-box">
+      <h3 id="formSectionTitle">Add New Product with Built-in Discount Calculator</h3>
+      <div class="editing-banner" id="editingBanner">✏️ You are currently editing product <b id="editingProductIdLabel"></b>. The ID cannot be changed.</div>
+      <div class="form-grid">
+        
+        <div class="form-group">
+          <label>Product ID *</label>
+          <input type="text" id="newId" placeholder="e.g. JW26 or WM30">
+        </div>
+
+        <div class="form-group">
+          <label>Main Category *</label>
+          <select id="newCategory" onchange="updateAdminSubOptions()">
+            <option value="jewelry">Jewelry</option>
+            <option value="women">Women's Clothing</option>
+            <option value="men">Men's Clothing</option>
+            <option value="shoes">Shoes & Footwear</option>
+            <option value="decor">Home Decor</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Sub-Category *</label>
+          <select id="newSubCategory">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Product Title *</label>
+          <input type="text" id="newTitle" placeholder="e.g. Royal Designer Necklace">
+        </div>
+
+        <div class="form-group">
+          <label>Main Product Image File *</label>
+          <input type="file" id="imageFileLoader" accept="image/*" onchange="handleImageUpload(event)" style="padding: 5px; font-size: 12px;">
+          <input type="hidden" id="newImg">
+          <img id="currentImgPreview" src="" alt="Current image" style="display:none; width:60px; height:60px; object-fit:cover; border-radius:4px; margin-top:6px; border:1px solid #e6d3d6;">
+        </div>
+
+        <div class="form-group">
+          <label>Additional Image URLs (Comma Separated)</label>
+          <input type="text" id="newExtraImages" placeholder="https://img1.jpg, https://img2.jpg">
+        </div>
+
+        <div class="form-group">
+          <label>Product Video URL (YouTube / MP4)</label>
+          <input type="text" id="newVideoUrl" placeholder="Paste YouTube embed or Video link">
+        </div>
+
+        <div class="form-group">
+          <label>Selling Price (₹) *</label>
+          <input type="text" id="newPrice" placeholder="e.g. 2499">
+        </div>
+
+        <div class="form-group">
+          <label>Original MRP (₹) *</label>
+          <input type="text" id="newOrig" placeholder="e.g. 4999">
+        </div>
+
+        <div class="form-group">
+          <label>Discount Badge *</label>
+          <input type="text" id="newDisc" placeholder="e.g. 50% off">
+          <div class="calc-box">
+            <span>Auto Calculate %:</span>
+            <button type="button" class="calc-btn" onclick="calculateDiscount()">Calculate %</button>
+          </div>
+        </div>
+
+        <div class="form-group full-width">
+          <label>Product Description *</label>
+          <textarea id="newDesc" rows="3" placeholder="Enter detailed product description, material details, and specifications..."></textarea>
+        </div>
+
+      </div>
+      <button class="admin-btn" id="submitProductBtn" onclick="addNewProduct()">Add Product to Inventory</button>
+      <button class="cancel-edit-btn" id="cancelEditBtn" style="display:none;" onclick="cancelEdit()">Cancel Edit</button>
+    </div>
+
+
+    <!-- Inventory Filter & List Section -->
+    <div class="section-box">
+      <h3>
+        <span>Live Inventory Management (Synced with Website)</span>
+        <button class="reset-btn" onclick="syncDatabase()">🔄 Sync Database</button>
+      </h3>
+      
+      <div class="filter-bar">
+        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+          <label>Filter by Category:</label>
+          <select id="filterCategory" onchange="filterAdminInventory()">
+            <option value="all">All Categories</option>
+            <option value="jewelry">Jewelry</option>
+            <option value="women">Women's Clothing</option>
+            <option value="men">Men's Clothing</option>
+            <option value="shoes">Shoes & Footwear</option>
+            <option value="decor">Home Decor</option>
+          </select>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>ID</th>
+            <th>Category / Sub</th>
+            <th>Product Title</th>
+            <th>Price</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="adminProductTableBody">
+          <!-- Dynamically populated -->
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script>
+    const subCategoriesMap = {
+      jewelry: [
+        { code: 'choker', name: 'Kundan Choker Sets' },
+        { code: 'temple', name: 'Temple & Gold Plated' },
+        { code: 'bracelet', name: 'Silver CZ Bracelets' },
+        { code: 'ring', name: 'Solitaire Rings' },
+        { code: 'bangle', name: 'Bangles & Kadas' }
+      ],
+      women: [
+        { code: 'saree', name: 'Sarees & Ethnic Wear' },
+        { code: 'gown', name: 'Dresses & Gowns' },
+        { code: 'kurti', name: 'Kurtis & Tunics' },
+        { code: 'western', name: 'Tops & Western Wear' },
+        { code: 'lehenga', name: 'Designer Lehengas' }
+      ],
+      men: [
+        { code: 'shirt', name: 'Shirts & Casual Tops' },
+        { code: 'blazer', name: 'Suits & Blazers' },
+        { code: 'kurta', name: 'Ethnic Wear & Kurtas' },
+        { code: 'jacket', name: 'Jackets & Coats' },
+        { code: 'polo', name: 'T-Shirts & Polos' }
+      ],
+      shoes: [
+        { code: 'formal_shoe', name: "Men's Formal Shoes" },
+        { code: 'sneaker', name: 'Casual Sneakers' },
+        { code: 'heel', name: "Women's Heels & Flats" },
+        { code: 'jutti', name: 'Ethnic Juttis' },
+        { code: 'loafer', name: 'Slip-on Loafers' }
+      ],
+      decor: [
+        { code: 'painting', name: 'Wall Hangings & Paintings' },
+        { code: 'vase', name: 'Vases & Pots' },
+        { code: 'lamp', name: 'Lamps & Lighting' },
+        { code: 'idol', name: 'Brass Idols & Statues' },
+        { code: 'cushion', name: 'Cushions & Rugs' }
+      ]
+    };
+
+    const initialProductsDB = [
+      { id: "JW01", category: "jewelry", sub: "choker", title: "Royal Kundan Choker Necklace with Matching Earrings", img: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop", description: "Experience premium global craftsmanship with this exquisite piece. Designed for utmost elegance, durability, and comfort.", extraImages: [], videoUrl: "", price: "2,499", orig: "4,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (342)" },
+      { id: "JW02", category: "jewelry", sub: "temple", title: "Antique Temple Gold Plated Bell Jhumka Earrings", img: "https://images.unsplash.com/photo-1635767798638-3e25273a8236?w=600&auto=format&fit=crop", description: "Traditional temple design earrings plated in rich gold, perfect for festive occasions and weddings.", extraImages: [], videoUrl: "", price: "1,299", orig: "2,599", disc: "50% off", rating: "⭐⭐⭐⭐☆ (189)" },
+      { id: "WM01", category: "women", sub: "saree", title: "Banarasi Silk Embroidered Festive Saree with Blouse Piece", img: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop", description: "Banarasi silk embroidered festive saree with matching unstitched blouse piece.", extraImages: [], videoUrl: "", price: "2,899", orig: "6,499", disc: "55% off", rating: "⭐⭐⭐⭐⭐ (612)" },
+      { id: "MN01", category: "men", sub: "shirt", title: "Premium Slim Fit Cotton Formal Dress Shirt", img: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&auto=format&fit=crop", description: "Premium slim fit cotton formal dress shirt designed for all-day comfort.", extraImages: [], videoUrl: "", price: "1,199", orig: "2,399", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (489)" },
+      { id: "SH01", category: "shoes", sub: "formal_shoe", title: "Men's Handcrafted Genuine Leather Oxford Shoes", img: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&auto=format&fit=crop", description: "Handcrafted genuine leather oxford shoes for men with classic styling.", extraImages: [], videoUrl: "", price: "2,999", orig: "5,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (412)" },
+      { id: "HD01", category: "decor", sub: "painting", title: "Modern Abstract Canvas Wall Art Painting Set", img: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=600&auto=format&fit=crop", description: "Modern abstract canvas wall art painting set to elevate your home decor.", extraImages: [], videoUrl: "", price: "1,799", orig: "3,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (310)" }
+    ];
+
+    let editingProductId = null;
+
+    function updateAdminSubOptions() {
+      const catSelect = document.getElementById('newCategory').value;
+      const subSelect = document.getElementById('newSubCategory');
+      subSelect.innerHTML = '';
+      
+      const subs = subCategoriesMap[catSelect] || [];
+      subs.forEach(sub => {
+        const opt = document.createElement('option');
+        opt.value = sub.code;
+        opt.innerText = sub.name;
+        subSelect.appendChild(opt);
+      });
+    }
+
+    function calculateDiscount() {
+      const priceStr = document.getElementById('newPrice').value.replace(/,/g, '').trim();
+      const origStr = document.getElementById('newOrig').value.replace(/,/g, '').trim();
+
+      const sellingPrice = parseFloat(priceStr);
+      const originalPrice = parseFloat(origStr);
+
+      if (isNaN(sellingPrice) || isNaN(originalPrice) || originalPrice <= 0) {
+        alert("Please enter a valid Selling Price and Original MRP!");
+        return;
+      }
+
+      if (sellingPrice >= originalPrice) {
+        alert("Selling Price must be lower than the Original MRP!");
+        return;
+      }
+
+      const discountAmount = originalPrice - sellingPrice;
+      const discountPercent = Math.round((discountAmount / originalPrice) * 100);
+
+      document.getElementById('newDisc').value = `${discountPercent}% off`;
+      alert(`Discount calculated: ${discountPercent}% off`);
+    }
+
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('newImg').value = e.target.result;
+          alert("Main image uploaded successfully!");
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function getStoredProducts() {
+      const saved = localStorage.getItem('osani_products_db');
+      if (!saved) {
+        localStorage.setItem('osani_products_db', JSON.stringify(initialProductsDB));
+        return initialProductsDB;
+      }
+      return JSON.parse(saved);
+    }
+
+    function saveStoredProducts(list) {
+      localStorage.setItem('osani_products_db', JSON.stringify(list));
+    }
+
+    function syncDatabase() {
+      const current = getStoredProducts();
+      saveStoredProducts(current);
+      filterAdminInventory();
+      alert("Database synced successfully!");
+    }
+
+    function renderAdminTable(items) {
+      const tbody = document.getElementById('adminProductTableBody');
+      tbody.innerHTML = '';
+
+      if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #777;">No products found in inventory.</td></tr>';
+        return;
+      }
+
+      items.forEach((item) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><img src="${item.img}" alt="Img" onerror="this.src='https://via.placeholder.com/45'"></td>
+          <td><b>${item.id}</b></td>
+          <td>${item.category.toUpperCase()} / <i>${item.sub}</i></td>
+          <td>${item.title}</td>
+          <td>₹${item.price}</td>
+          <td>
+            <button class="edit-btn" onclick="editProduct('${item.id}')">Edit</button>
+            <button class="delete-btn" onclick="deleteProduct('${item.id}')">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterAdminInventory() {
+      const filterCat = document.getElementById('filterCategory').value;
+      const db = getStoredProducts();
+      
+      if (filterCat === 'all') {
+        renderAdminTable(db);
+      } else {
+        const filtered = db.filter(p => p.category === filterCat);
+        renderAdminTable(filtered);
+      }
+    }
+
+    function resetProductForm() {
+      document.getElementById('newId').value = '';
+      document.getElementById('newId').disabled = false;
+      document.getElementById('newTitle').value = '';
+      document.getElementById('newImg').value = '';
+      document.getElementById('newExtraImages').value = '';
+      document.getElementById('newVideoUrl').value = '';
+      document.getElementById('newPrice').value = '';
+      document.getElementById('newOrig').value = '';
+      document.getElementById('newDisc').value = '';
+      document.getElementById('newDesc').value = '';
+      document.getElementById('imageFileLoader').value = '';
+      document.getElementById('currentImgPreview').style.display = 'none';
+      document.getElementById('currentImgPreview').src = '';
+      document.getElementById('newCategory').selectedIndex = 0;
+      updateAdminSubOptions();
+    }
+
+    function addNewProduct() {
+      const id = document.getElementById('newId').value.trim();
+      const category = document.getElementById('newCategory').value;
+      const sub = document.getElementById('newSubCategory').value;
+      const title = document.getElementById('newTitle').value.trim();
+      const img = document.getElementById('newImg').value.trim();
+      const extraImagesRaw = document.getElementById('newExtraImages').value.trim();
+      const videoUrl = document.getElementById('newVideoUrl').value.trim();
+      const price = document.getElementById('newPrice').value.trim();
+      const orig = document.getElementById('newOrig').value.trim();
+      const disc = document.getElementById('newDisc').value.trim();
+      const description = document.getElementById('newDesc').value.trim();
+
+      if (!id || !title || !img || !price || !orig || !description) {
+        alert("Please fill in all required fields, upload an image, and add a description!");
+        return;
+      }
+
+      const extraImages = extraImagesRaw ? extraImagesRaw.split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
+
+      let db = getStoredProducts();
+
+      if (editingProductId) {
+        const index = db.findIndex(p => p.id === editingProductId);
+        if (index === -1) {
+          alert("Product not found — it may have already been deleted.");
+          cancelEdit();
+          return;
+        }
+        db[index] = {
+          ...db[index],
+          category: category,
+          sub: sub,
+          title: title,
+          img: img,
+          description: description,
+          extraImages: extraImages,
+          videoUrl: videoUrl,
+          price: price,
+          orig: orig,
+          disc: disc || "50% off"
+        };
+        saveStoredProducts(db);
+        alert("Product updated successfully and synced with the website!");
+        cancelEdit();
+      } else {
+        const newProd = {
+          id: id,
+          category: category,
+          sub: sub,
+          title: title,
+          img: img,
+          description: description,
+          extraImages: extraImages,
+          videoUrl: videoUrl,
+          price: price,
+          orig: orig,
+          disc: disc || "50% off",
+          rating: "⭐⭐⭐⭐⭐ (100)"
+        };
+
+        db.unshift(newProd);
+        saveStoredProducts(db);
+
+        alert("Product added successfully and synced with the website!");
+        resetProductForm();
+      }
+
+      filterAdminInventory();
+    }
+
+    function editProduct(productId) {
+      const db = getStoredProducts();
+      const prod = db.find(p => p.id === productId);
+      if (!prod) {
+        alert("Product not found.");
+        return;
+      }
+
+      editingProductId = productId;
+
+      document.getElementById('newId').value = prod.id;
+      document.getElementById('newId').disabled = true;
+      document.getElementById('newCategory').value = prod.category;
+      updateAdminSubOptions();
+      document.getElementById('newSubCategory').value = prod.sub;
+      document.getElementById('newTitle').value = prod.title;
+      document.getElementById('newImg').value = prod.img;
+      document.getElementById('currentImgPreview').src = prod.img;
+      document.getElementById('currentImgPreview').style.display = 'inline-block';
+      document.getElementById('newExtraImages').value = (prod.extraImages || []).join(', ');
+      document.getElementById('newVideoUrl').value = prod.videoUrl || '';
+      document.getElementById('newPrice').value = prod.price;
+      document.getElementById('newOrig').value = prod.orig;
+      document.getElementById('newDisc').value = prod.disc;
+      document.getElementById('newDesc').value = prod.description || '';
+
+      document.getElementById('formSectionTitle').innerText = 'Edit Product';
+      document.getElementById('editingBanner').style.display = 'block';
+      document.getElementById('editingProductIdLabel').innerText = prod.id;
+      document.getElementById('submitProductBtn').innerText = 'Update Product';
+      document.getElementById('cancelEditBtn').style.display = 'inline-block';
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+      editingProductId = null;
+      resetProductForm();
+      document.getElementById('formSectionTitle').innerText = 'Add New Product with Built-in Discount Calculator';
+      document.getElementById('editingBanner').style.display = 'none';
+      document.getElementById('submitProductBtn').innerText = 'Add Product to Inventory';
+      document.getElementById('cancelEditBtn').style.display = 'none';
+    }
+
+    function deleteProduct(productId) {
+      if (confirm("Are you sure you want to delete this product?")) {
+        let db = getStoredProducts();
+        db = db.filter(p => p.id !== productId);
+        saveStoredProducts(db);
+        if (editingProductId === productId) {
+          cancelEdit();
+        }
+        filterAdminInventory();
+      }
+    }
+
+    window.onload = function() {
+      updateAdminSubOptions();
+      filterAdminInventory();
+    };
+  </script>
+
+</body>
+</html>
