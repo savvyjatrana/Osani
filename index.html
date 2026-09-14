@@ -1405,7 +1405,7 @@
       <div class="nav-action" onclick="openCartCheckout()" title="View Shopping Cart & Checkout">
         <span class="icon">🛒</span>
         <span>Bag</span>
-        <span class="badge-counter" id="cartCounter">2</span>
+        <span class="badge-counter" id="cartCounter">0</span>
       </div>
     </div>
   </header>
@@ -2180,10 +2180,7 @@
     ];
 
     // =====================================================================
-    // FIREBASE CONFIG — paste your own project's config here.
-    // Get this from: Firebase Console → Project Settings → General → Your apps → Web app
-    // This SAME config must also be pasted into admin.html so both files
-    // talk to the same cloud database.
+    // FIREBASE CONFIG
     // =====================================================================
     const firebaseConfig = {
       apiKey: "AIzaSyARcy6Pr85p8-4UVbNBh1LILR4nfVS3JIU",
@@ -2202,13 +2199,9 @@
       console.warn("Firebase not configured yet — showing built-in catalog only.", e);
     }
 
-    // Tracks whatever the visitor is currently looking at, so that when live
-    // product data arrives (or changes) from the cloud, we can refresh the
-    // same view instead of yanking them back to the homepage.
     let currentViewState = { type: 'collection', cat: 'jewelry', title: 'Fashion Jewelry Collection' };
 
     function refreshCurrentView() {
-      // Don't disturb someone who is reading a product detail page.
       if (document.getElementById('productDetailView').style.display === 'block') return;
       const s = currentViewState;
       if (s.type === 'collection') loadCollection(s.cat, s.title);
@@ -2219,8 +2212,6 @@
       }
     }
 
-    // Real-time cloud sync: whenever admin.html adds/edits/deletes a product,
-    // this fires automatically on every open device/tab — no refresh needed.
     if (db) {
       db.collection("products").onSnapshot((snapshot) => {
         const liveProducts = [];
@@ -2235,7 +2226,8 @@
       });
     }
 
-    let cartItems = [ { ...productsDB[0], qty: 1 }, { ...productsDB[1], qty: 1 } ];
+    // FIXED: Cart starts completely empty instead of pre-populating dummy items.
+    let cartItems = [];
     let wishlistItems = [];
     let currentUser = null;
     let activeDetailProduct = null;
@@ -2748,8 +2740,6 @@
       document.getElementById('checkoutModal').style.display = 'none';
     }
 
-    // Computes the real numeric order total directly from cart data (not by
-    // re-parsing the displayed "₹x,xxx" string), so it's safe to send to Printrove.
     const ORDER_STATUS_LABELS = {
       pending: "Processing",
       sent_to_printrove: "Confirmed",
@@ -2771,13 +2761,6 @@
       document.getElementById('myOrdersModal').style.display = 'flex';
     }
 
-    // Looks up a single order by its Firestore document ID (shown to the
-    // customer on their order confirmation screen). We deliberately do NOT
-    // offer an open "list all my orders by email" query here — Firestore
-    // security rules should restrict listing/querying the orders collection
-    // to signed-in admins only, so guests can't browse each other's orders.
-    // A direct get-by-ID lookup is safe to leave open since the ID itself
-    // acts like an unguessable order/confirmation number.
     async function lookupOrderById() {
       const orderId = document.getElementById('trackOrderIdInput').value.trim();
       const listEl = document.getElementById('myOrdersList');
@@ -2841,7 +2824,7 @@
       const pincode = document.getElementById('custPincode').value.trim();
       const country = document.getElementById('custCountry').value;
       const phoneRaw = document.getElementById('custPhone').value.trim();
-      const phone = phoneRaw.replace(/\D/g, '').slice(-10); // keep last 10 digits only
+      const phone = phoneRaw.replace(/\D/g, '').slice(-10);
       const method = document.querySelector('input[name="payMethod"]:checked').value;
       document.getElementById('checkoutFormError').style.display = 'none';
 
@@ -2854,10 +2837,6 @@
         return;
       }
 
-      // Only items tagged for the Printrove store need a variant ID (set
-      // per-product in the admin panel) — without it, Printrove has no way
-      // to know which physical product/size/color to print & ship.
-      // BapStore and My Store items don't need one.
       const missingVariant = cartItems.find(item => (item.store || 'mystore') === 'printrove' && !item.printroveVariantId);
       if (missingVariant) {
         showCheckoutFormError(`"${missingVariant.title}" isn't linked to a Printrove product yet. Please contact support — this item can't be fulfilled until an admin sets its Printrove Variant ID.`);
@@ -2874,9 +2853,6 @@
 
       const retailPrice = calculateCartTotal();
 
-      // Each cart item carries its fulfillment "store" tag (set per-product
-      // in admin.html: Printrove / BapStore / My Store). Untagged legacy
-      // products default to My Store so nothing silently vanishes.
       const storesInCart = new Set(cartItems.map(item => item.store || 'mystore'));
       const storeStatus = {
         printrove: storesInCart.has('printrove') ? 'pending' : 'not_applicable',
@@ -2885,7 +2861,7 @@
       };
 
       const orderDoc = {
-        status: "pending", // the Cloud Function flips this to sent_to_printrove / failed / partially_fulfilled
+        status: "pending",
         storeStatus: storeStatus,
         printroveOrderId: null,
         trackingNumber: null,
@@ -2910,7 +2886,6 @@
           quantity: item.qty || 1,
           isPlain: false,
           store: item.store || 'mystore',
-          // Kept for display in the admin Orders tab only — not sent to Printrove.
           productId: item.id,
           title: item.title,
           unitPrice: parseFloat(String(item.price).replace(/,/g, '')) || 0
@@ -2945,12 +2920,6 @@
         `;
         cartItems = [];
       } catch (err) {
-        // Logged with the Firebase error code so you can diagnose exactly
-        // why checkout failed from the browser console (F12 → Console).
-        // Common culprits: "permission-denied" = firestore.rules blocking
-        // the write (re-deploy firestore.rules), "unavailable"/network
-        // errors = connectivity, or the Firebase config in this file not
-        // matching your actual project.
         console.error(`Failed to save order [${err.code || 'no-code'}]:`, err.message || err);
         showCheckoutFormError(`Something went wrong placing your order${err.code ? ' (' + err.code + ')' : ''}. Please try again, or contact support if this keeps happening.`);
       } finally {
