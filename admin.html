@@ -3,48 +3,1237 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OSANI.COM - Admin Control Panel</title>
+  <title>OSANI.COM - Admin Inventory Management</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
-    body { background: #fcf8f7; color: #3d282b; padding: 20px; }
-    h1 { color: #b76e79; margin-bottom: 20px; }
-    .section { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border: 1px solid #e6d3d6; padding: 10px; text-align: left; font-size: 13px; }
-    th { background: #f5e4e7; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      background-color: #fcf8f7;
+      color: #3d282b;
+    }
+
+    .admin-header {
+      background-color: #3d282b;
+      color: white;
+      padding: 15px 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .admin-header h1 {
+      font-size: 20px;
+      color: #b76e79;
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: 20px auto;
+      padding: 0 20px;
+    }
+
+    .section-box {
+      background: #ffffff;
+      border: 1px solid #e6d3d6;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 2px 8px rgba(183,110,121,0.1);
+    }
+
+    .section-box h3 {
+      font-size: 16px;
+      color: #3d282b;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #f5e4e7;
+      padding-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 10px;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 4px;
+      color: #3d282b;
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #b76e79;
+      border-radius: 4px;
+      font-size: 13px;
+      outline: none;
+      background: #fff;
+    }
+
+    .calc-box {
+      background: #f5e4e7;
+      padding: 8px 10px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: bold;
+      color: #3d282b;
+      margin-top: 4px;
+      border: 1px solid #e6cbd0;
+    }
+
+    .calc-btn {
+      background: #b76e79;
+      color: white;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+    .calc-btn:hover {
+      background: #a35a64;
+    }
+
+    .admin-btn {
+      background-color: #b76e79;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+    .admin-btn:hover {
+      background-color: #a35a64;
+    }
+
+    .reset-btn {
+      background-color: #cc0c39;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .reset-btn:hover {
+      background-color: #a80a2e;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: #fff;
+      font-size: 13px;
+    }
+
+    th, td {
+      border: 1px solid #e6d3d6;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f5e4e7;
+      color: #3d282b;
+    }
+
+    td img {
+      width: 45px;
+      height: 45px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+
+    .delete-btn {
+      background-color: #cc0c39;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      font-size: 11px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .delete-btn:hover {
+      background-color: #a80a2e;
+    }
+
+    .edit-btn {
+      background-color: #2b6cb0;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      font-size: 11px;
+      border-radius: 3px;
+      cursor: pointer;
+      margin-right: 6px;
+    }
+
+    .edit-btn:hover {
+      background-color: #1e4e82;
+    }
+
+    .cancel-edit-btn {
+      background-color: #888;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      font-size: 13px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    .cancel-edit-btn:hover {
+      background-color: #666;
+    }
+
+    .editing-banner {
+      display: none;
+      background: #fff6d6;
+      border: 1px solid #e0c34a;
+      color: #6b5900;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .sync-status {
+      font-size: 11px;
+      font-weight: normal;
+      padding: 3px 10px;
+      border-radius: 10px;
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .sync-status.offline {
+      background: #fdecea;
+      color: #c62828;
+    }
+
+    /* Admin Login Gate */
+    #adminLoginOverlay {
+      position: fixed;
+      inset: 0;
+      background: #3d282b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .login-box {
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      width: 320px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    .login-box h2 {
+      color: #b76e79;
+      margin-bottom: 4px;
+    }
+    .login-box p {
+      font-size: 12px;
+      color: #777;
+      margin-bottom: 16px;
+    }
+    .login-box input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #b76e79;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    .login-box button {
+      width: 100%;
+      padding: 10px;
+      background: #b76e79;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .login-box button:hover { background: #a35a64; }
+    .login-error {
+      color: #cc0c39;
+      font-size: 12px;
+      margin-top: 8px;
+      display: none;
+    }
+    #adminContent { display: none; }
   </style>
 </head>
 <body>
-  <h1>OSANI.COM - Admin Dashboard</h1>
-  <div class="section">
-    <h3>Live Orders</h3>
-    <table>
-      <thead>
-        <tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th></tr>
-      </thead>
-      <tbody id="ordersTableBody"><tr><td colspan="4">Loading...</td></tr></tbody>
-    </table>
+
+  <!-- Admin Login Gate (Firebase Authentication) -->
+  <div id="adminLoginOverlay">
+    <div class="login-box">
+      <h2>🔒 Admin Login</h2>
+      <p>OSANI.COM Inventory Control Panel</p>
+      <input type="email" id="adminEmail" placeholder="Admin Email">
+      <input type="password" id="adminPassword" placeholder="Password">
+      <button onclick="adminLogin()">Login</button>
+      <div class="login-error" id="loginError">Invalid email or password.</div>
+    </div>
   </div>
 
+  <div id="adminContent">
+
+  <header class="admin-header">
+    <h1>OSANI.COM - Admin Inventory Control <span class="sync-status offline" id="syncStatusBadge">Connecting...</span></h1>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <a href="index.html" style="color: #f3e6e8; font-size: 13px; text-decoration: underline;">← Back to Website</a>
+      <button class="cancel-edit-btn" style="margin:0;" onclick="adminLogout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Add New Product Section -->
+    <div class="section-box">
+      <h3 id="formSectionTitle">Add New Product with Built-in Discount Calculator</h3>
+      <div class="editing-banner" id="editingBanner">✏️ You are currently editing product <b id="editingProductIdLabel"></b>. The ID cannot be changed.</div>
+      <div class="form-grid">
+        
+        <div class="form-group">
+          <label>Product ID *</label>
+          <input type="text" id="newId" placeholder="e.g. JW26 or WM30">
+        </div>
+
+        <div class="form-group">
+          <label>Main Category *</label>
+          <select id="newCategory" onchange="updateAdminSubOptions()">
+            <option value="jewelry">Jewelry</option>
+            <option value="women">Women's Clothing</option>
+            <option value="men">Men's Clothing</option>
+            <option value="shoes">Shoes & Footwear</option>
+            <option value="decor">Home Decor</option>
+            <option value="cosmetics">Cosmetics & Beauty</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Sub-Category *</label>
+          <select id="newSubCategory">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Product Title *</label>
+          <input type="text" id="newTitle" placeholder="e.g. Royal Designer Necklace">
+        </div>
+
+        <div class="form-group">
+          <label>Main Product Image File *</label>
+          <input type="file" id="imageFileLoader" accept="image/*" onchange="handleImageUpload(event)" style="padding: 5px; font-size: 12px;">
+          <input type="hidden" id="newImg">
+          <img id="currentImgPreview" src="" alt="Current image" style="display:none; width:60px; height:60px; object-fit:cover; border-radius:4px; margin-top:6px; border:1px solid #e6d3d6;">
+        </div>
+
+        <div class="form-group">
+          <label>Additional Image URLs (Comma Separated)</label>
+          <input type="text" id="newExtraImages" placeholder="https://img1.jpg, https://img2.jpg">
+        </div>
+
+        <div class="form-group">
+          <label>Product Video URL (YouTube / MP4)</label>
+          <input type="text" id="newVideoUrl" placeholder="Paste YouTube embed or Video link">
+        </div>
+
+        <div class="form-group">
+          <label>Selling Price (₹) *</label>
+          <input type="text" id="newPrice" placeholder="e.g. 2499">
+        </div>
+
+        <div class="form-group">
+          <label>Original MRP (₹) *</label>
+          <input type="text" id="newOrig" placeholder="e.g. 4999">
+        </div>
+
+        <div class="form-group">
+          <label>Discount Badge *</label>
+          <input type="text" id="newDisc" placeholder="e.g. 50% off">
+          <div class="calc-box">
+            <span>Auto Calculate %:</span>
+            <button type="button" class="calc-btn" onclick="calculateDiscount()">Calculate %</button>
+          </div>
+        </div>
+
+        <div class="form-group full-width">
+          <label>Product Description *</label>
+          <textarea id="newDesc" rows="3" placeholder="Enter detailed product description, material details, and specifications..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Fulfillment Store *</label>
+          <select id="newFulfillmentStore" onchange="updateFulfillmentFieldVisibility()">
+            <option value="printrove">🖨 Printrove (print-on-demand)</option>
+            <option value="bapstore">📦 BapStore (dropship)</option>
+            <option value="mystore">🏬 My Store (self-fulfilled)</option>
+          </select>
+          <div style="font-size:11px;color:#777;margin-top:3px;">Which cart this product's orders land in on the Orders tab below.</div>
+        </div>
+
+        <div class="form-group" id="printroveVariantField">
+          <label>Printrove Variant ID</label>
+          <input type="text" id="newPrintroveVariantId" placeholder="e.g. 460021">
+          <div style="font-size:11px;color:#777;margin-top:3px;">From Printrove's Product Library API. Required before this product can be ordered — checkout blocks items without one.</div>
+        </div>
+
+        <div class="form-group" id="bapstoreProductIdField" style="display:none;">
+          <label>BapStore Product/SKU ID</label>
+          <input type="text" id="newBapstoreProductId" placeholder="e.g. BAP-10432">
+          <div style="font-size:11px;color:#777;margin-top:3px;">Your reference ID on BapStore.com, for matching orders when you fulfill them there.</div>
+        </div>
+
+      </div>
+      <button class="admin-btn" id="submitProductBtn" onclick="addNewProduct()">Add Product to Inventory</button>
+      <button class="cancel-edit-btn" id="cancelEditBtn" style="display:none;" onclick="cancelEdit()">Cancel Edit</button>
+    </div>
+
+
+    <!-- Orders & Fulfillment Section: three carts, one per store -->
+    <div class="section-box">
+      <h3>
+        <span>Orders & Fulfillment</span>
+        <span id="ordersSyncStatusBadge" class="sync-status offline">● Connecting...</span>
+      </h3>
+      <div class="filter-bar" style="gap:8px;">
+        <button type="button" class="admin-btn" id="ordersTabBtn-printrove" onclick="switchOrdersTab('printrove')" style="width:auto;">🖨 Printrove Cart <span id="ordersTabCount-printrove">(0)</span></button>
+        <button type="button" class="admin-btn" id="ordersTabBtn-bapstore" onclick="switchOrdersTab('bapstore')" style="width:auto;background:#777;">📦 BapStore Cart <span id="ordersTabCount-bapstore">(0)</span></button>
+        <button type="button" class="admin-btn" id="ordersTabBtn-mystore" onclick="switchOrdersTab('mystore')" style="width:auto;background:#777;">🏬 My Store Cart <span id="ordersTabCount-mystore">(0)</span></button>
+      </div>
+      <div class="filter-bar">
+        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+          <label>Filter by Status:</label>
+          <select id="filterOrderStatus" onchange="renderOrdersTable()"></select>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th id="ordersColItems">Items (this store)</th>
+            <th>Subtotal</th>
+            <th>Status</th>
+            <th id="ordersColTracking">Tracking</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="adminOrdersTableBody">
+          <tr><td colspan="7" style="text-align:center;color:#777;">Loading orders...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Inventory Filter & List Section -->
+    <div class="section-box">
+      <h3>
+        <span>Live Inventory Management (Real-Time Cloud Sync)</span>
+        <button class="reset-btn" onclick="seedInitialProducts()">☁️ Upload Starter Catalog (first-time only)</button>
+      </h3>
+      
+      <div class="filter-bar">
+        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+          <label>Filter by Category:</label>
+          <select id="filterCategory" onchange="filterAdminInventory()">
+            <option value="all">All Categories</option>
+            <option value="jewelry">Jewelry</option>
+            <option value="women">Women's Clothing</option>
+            <option value="men">Men's Clothing</option>
+            <option value="shoes">Shoes & Footwear</option>
+            <option value="decor">Home Decor</option>
+            <option value="cosmetics">Cosmetics & Beauty</option>
+          </select>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>ID</th>
+            <th>Category / Sub</th>
+            <th>Product Title</th>
+            <th>Store</th>
+            <th>Price</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="adminProductTableBody">
+          <!-- Dynamically populated -->
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  </div> <!-- /#adminContent -->
+
+  <!-- Firebase SDK (compat build - works with plain <script> tags, no build step needed) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
+
   <script>
+    // =====================================================================
+    // FIREBASE CONFIG — paste your own project's config here.
+    // Get this from: Firebase Console → Project Settings → General → Your apps → Web app
+    // This SAME config must also be pasted into index.html so both files
+    // talk to the same cloud database.
+    // =====================================================================
     const firebaseConfig = {
       apiKey: "AIzaSyARcy6Pr85p8-4UVbNBh1LILR4nfVS3JIU",
       authDomain: "osani-84e2e.firebaseapp.com",
-      projectId: "osani-84e2e"
+      projectId: "osani-84e2e",
+      storageBucket: "osani-84e2e.firebasestorage.app",
+      messagingSenderId: "178272531084",
+      appId: "1:178272531084:web:70e6c019b03fe79f3041a9"
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
 
-    db.collection("orders").orderBy("createdAt", "desc").onSnapshot(snapshot => {
-      let rows = "";
-      snapshot.forEach(doc => {
-        let o = doc.data();
-        rows += `<tr><td><b>${doc.id}</b></td><td>${o.customer?.name || ''}</td><td>₹${o.retailPrice}</td><td>${o.status}</td></tr>`;
-      });
-      document.getElementById('ordersTableBody').innerHTML = rows || '<tr><td colspan="4">No orders found.</td></tr>';
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const cloudFunctions = firebase.functions();
+
+    // ---------------------- ADMIN LOGIN (Firebase Auth) ----------------------
+    // Create the admin's email/password once in:
+    // Firebase Console → Authentication → Sign-in method → enable "Email/Password"
+    // Firebase Console → Authentication → Users → Add user
+    function adminLogin() {
+      const email = document.getElementById('adminEmail').value.trim();
+      const password = document.getElementById('adminPassword').value;
+      document.getElementById('loginError').style.display = 'none';
+
+      auth.signInWithEmailAndPassword(email, password)
+        .catch((error) => {
+          document.getElementById('loginError').innerText = error.message;
+          document.getElementById('loginError').style.display = 'block';
+        });
+    }
+
+    function adminLogout() {
+      auth.signOut();
+    }
+
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        document.getElementById('adminLoginOverlay').style.display = 'none';
+        document.getElementById('adminContent').style.display = 'block';
+        initInventorySync();
+        switchOrdersTab('printrove');
+        initOrdersSync();
+      } else {
+        document.getElementById('adminLoginOverlay').style.display = 'flex';
+        document.getElementById('adminContent').style.display = 'none';
+      }
     });
   </script>
+
+  <script>
+    const subCategoriesMap = {
+      jewelry: [
+        { code: 'choker', name: 'Kundan Choker Sets' },
+        { code: 'temple', name: 'Temple & Gold Plated' },
+        { code: 'bracelet', name: 'Silver CZ Bracelets' },
+        { code: 'ring', name: 'Solitaire Rings' },
+        { code: 'bangle', name: 'Bangles & Kadas' }
+      ],
+      women: [
+        { code: 'saree', name: 'Sarees & Ethnic Wear' },
+        { code: 'gown', name: 'Dresses & Gowns' },
+        { code: 'kurti', name: 'Kurtis & Tunics' },
+        { code: 'western', name: 'Tops & Western Wear' },
+        { code: 'lehenga', name: 'Designer Lehengas' }
+      ],
+      men: [
+        { code: 'shirt', name: 'Shirts & Casual Tops' },
+        { code: 'blazer', name: 'Suits & Blazers' },
+        { code: 'kurta', name: 'Ethnic Wear & Kurtas' },
+        { code: 'jacket', name: 'Jackets & Coats' },
+        { code: 'polo', name: 'T-Shirts & Polos' }
+      ],
+      shoes: [
+        { code: 'formal_shoe', name: "Men's Formal Shoes" },
+        { code: 'sneaker', name: 'Casual Sneakers' },
+        { code: 'heel', name: "Women's Heels & Flats" },
+        { code: 'jutti', name: 'Ethnic Juttis' },
+        { code: 'loafer', name: 'Slip-on Loafers' }
+      ],
+      decor: [
+        { code: 'painting', name: 'Wall Hangings & Paintings' },
+        { code: 'vase', name: 'Vases & Pots' },
+        { code: 'lamp', name: 'Lamps & Lighting' },
+        { code: 'idol', name: 'Brass Idols & Statues' },
+        { code: 'cushion', name: 'Cushions & Rugs' }
+      ],
+      cosmetics: [
+        { code: 'makeup', name: 'Makeup Essentials' },
+        { code: 'skincare', name: 'Skincare & Face Care' },
+        { code: 'haircare', name: 'Haircare Products' },
+        { code: 'fragrance', name: 'Perfumes & Fragrances' },
+        { code: 'tools', name: 'Beauty Tools & Accessories' }
+      ]
+    };
+
+    const initialProductsDB = [
+      { id: "JW01", category: "jewelry", sub: "choker", title: "Royal Kundan Choker Necklace with Matching Earrings", img: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop", description: "Royal Kundan Choker Necklace with Matching Earrings. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,499", orig: "4,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (342)" },
+      { id: "JW02", category: "jewelry", sub: "choker", title: "Victorian Polki Stone Studded Wedding Choker Set", img: "https://images.unsplash.com/photo-1611591475819-79b8b73810f1?w=600&auto=format&fit=crop", description: "Victorian Polki Stone Studded Wedding Choker Set. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "3,199", orig: "6,299", disc: "49% off", rating: "⭐⭐⭐⭐⭐ (210)" },
+      { id: "JW03", category: "jewelry", sub: "choker", title: "Meenakari Enamel Bridal Statement Choker", img: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&auto=format&fit=crop", description: "Meenakari Enamel Bridal Statement Choker. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,999", orig: "3,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (145)" },
+      { id: "JW04", category: "jewelry", sub: "choker", title: "Emerald Green Stone Beaded Royal Choker", img: "https://images.unsplash.com/photo-1599643477877-530eb83abc8e?w=600&auto=format&fit=crop", description: "Emerald Green Stone Beaded Royal Choker. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,799", orig: "5,499", disc: "49% off", rating: "⭐⭐⭐⭐⭐ (98)" },
+      { id: "JW05", category: "jewelry", sub: "choker", title: "Minimalist Pearl Choker Necklace for Reception", img: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&auto=format&fit=crop", description: "Minimalist Pearl Choker Necklace for Reception. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,499", orig: "2,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (305)" },
+      { id: "JW06", category: "jewelry", sub: "temple", title: "Antique Temple Gold Plated Bell Jhumka Earrings", img: "https://images.unsplash.com/photo-1635767798638-3e25273a8236?w=600&auto=format&fit=crop", description: "Antique Temple Gold Plated Bell Jhumka Earrings. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,299", orig: "2,599", disc: "50% off", rating: "⭐⭐⭐⭐☆ (189)" },
+      { id: "JW07", category: "jewelry", sub: "temple", title: "Goddess Lakshmi Motif Antique Haram Necklace", img: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop", description: "Goddess Lakshmi Motif Antique Haram Necklace. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "3,499", orig: "6,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (412)" },
+      { id: "JW08", category: "jewelry", sub: "temple", title: "South Indian Traditional Nagas Work Bangle", img: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&auto=format&fit=crop", description: "South Indian Traditional Nagas Work Bangle. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,899", orig: "3,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (92)" },
+      { id: "JW09", category: "jewelry", sub: "temple", title: "Ruby & Emerald Studded Antique Kemp Jhumkas", img: "https://images.unsplash.com/photo-1635767798638-3e25273a8236?w=600&auto=format&fit=crop", description: "Ruby & Emerald Studded Antique Kemp Jhumkas. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,599", orig: "3,199", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (230)" },
+      { id: "JW10", category: "jewelry", sub: "temple", title: "Classic South Indian Temple Coin Long Necklace", img: "https://images.unsplash.com/photo-1611591475819-79b8b73810f1?w=600&auto=format&fit=crop", description: "Classic South Indian Temple Coin Long Necklace. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "4,199", orig: "8,499", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (178)" },
+      { id: "JW11", category: "jewelry", sub: "bracelet", title: "Silver Plated Sparkle CZ Tennis Bracelet", img: "https://images.unsplash.com/photo-1611591475819-79b8b73810f1?w=600&auto=format&fit=crop", description: "Silver Plated Sparkle CZ Tennis Bracelet. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,899", orig: "3,499", disc: "45% off", rating: "⭐⭐⭐⭐⭐ (512)" },
+      { id: "JW12", category: "jewelry", sub: "bracelet", title: "Rose Gold Infinity Charm Crystal Bracelet", img: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&auto=format&fit=crop", description: "Rose Gold Infinity Charm Crystal Bracelet. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,199", orig: "2,399", disc: "50% off", rating: "⭐⭐⭐⭐☆ (320)" },
+      { id: "JW13", category: "jewelry", sub: "bracelet", title: "18K Gold Plated Sleek Everyday Cuff Bracelet", img: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&auto=format&fit=crop", description: "18K Gold Plated Sleek Everyday Cuff Bracelet. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,599", orig: "3,199", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (167)" },
+      { id: "JW14", category: "jewelry", sub: "bracelet", title: "Interlocking Circles Geometric Silver Bracelet", img: "https://images.unsplash.com/photo-1611591475819-79b8b73810f1?w=600&auto=format&fit=crop", description: "Interlocking Circles Geometric Silver Bracelet. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,399", orig: "2,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (211)" },
+      { id: "JW15", category: "jewelry", sub: "bracelet", title: "Multi-Layered Pearl & Crystal Delicate Bracelet", img: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop", description: "Multi-Layered Pearl & Crystal Delicate Bracelet. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "999", orig: "1,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (140)" },
+      { id: "JW16", category: "jewelry", sub: "ring", title: "Classic Solitaire Rose Gold Diamond Cut Ring", img: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&auto=format&fit=crop", description: "Classic Solitaire Rose Gold Diamond Cut Ring. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "3,199", orig: "5,999", disc: "46% off", rating: "⭐⭐⭐⭐⭐ (428)" },
+      { id: "JW17", category: "jewelry", sub: "ring", title: "Adjustable Silver Crown Princess Finger Ring", img: "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=600&auto=format&fit=crop", description: "Adjustable Silver Crown Princess Finger Ring. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "899", orig: "1,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (295)" },
+      { id: "JW18", category: "jewelry", sub: "ring", title: "Vintage Emerald Cut Cocktail Party Ring", img: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&auto=format&fit=crop", description: "Vintage Emerald Cut Cocktail Party Ring. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,799", orig: "3,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (184)" },
+      { id: "JW19", category: "jewelry", sub: "ring", title: "Dual Heart Linked Interlocked Silver Ring", img: "https://images.unsplash.com/photo-1611591475819-79b8b73810f1?w=600&auto=format&fit=crop", description: "Dual Heart Linked Interlocked Silver Ring. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,099", orig: "2,199", disc: "50% off", rating: "⭐⭐⭐⭐☆ (120)" },
+      { id: "JW20", category: "jewelry", sub: "ring", title: "Bold Statement Floral Zirconia Cocktail Ring", img: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop", description: "Bold Statement Floral Zirconia Cocktail Ring. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,299", orig: "4,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (310)" },
+      { id: "JW21", category: "jewelry", sub: "bangle", title: "Traditional Gold Plated Pearl Bangle Kada Set", img: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&auto=format&fit=crop", description: "Traditional Gold Plated Pearl Bangle Kada Set. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,599", orig: "2,999", disc: "47% off", rating: "⭐⭐⭐⭐☆ (265)" },
+      { id: "JW22", category: "jewelry", sub: "bangle", title: "Sparkling American Diamond Openable Kada", img: "https://images.unsplash.com/photo-1611591475819-79b8b73810f1?w=600&auto=format&fit=crop", description: "Sparkling American Diamond Openable Kada. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,099", orig: "4,199", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (411)" },
+      { id: "JW23", category: "jewelry", sub: "bangle", title: "Oxidized Silver Heavy Tribal Bangles (Set of 4)", img: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&auto=format&fit=crop", description: "Oxidized Silver Heavy Tribal Bangles (Set of 4). A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,299", orig: "2,599", disc: "50% off", rating: "⭐⭐⭐⭐☆ (189)" },
+      { id: "JW24", category: "jewelry", sub: "bangle", title: "Ruby Stone Embedded Designer Gold Kada", img: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop", description: "Ruby Stone Embedded Designer Gold Kada. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,499", orig: "4,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (225)" },
+      { id: "JW25", category: "jewelry", sub: "bangle", title: "Daily Wear Sleek Rose Gold Plated Bangles", img: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&auto=format&fit=crop", description: "Daily Wear Sleek Rose Gold Plated Bangles. A premium quality jewelry piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,199", orig: "2,399", disc: "50% off", rating: "⭐⭐⭐⭐☆ (301)" },
+      { id: "WM01", category: "women", sub: "saree", title: "Banarasi Silk Embroidered Festive Saree with Blouse Piece", img: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop", description: "Banarasi Silk Embroidered Festive Saree with Blouse Piece. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,899", orig: "6,499", disc: "55% off", rating: "⭐⭐⭐⭐⭐ (612)" },
+      { id: "WM02", category: "women", sub: "saree", title: "Kanjivaram Pure Zari Woven Silk Saree", img: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&auto=format&fit=crop", description: "Kanjivaram Pure Zari Woven Silk Saree. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "4,299", orig: "8,999", disc: "52% off", rating: "⭐⭐⭐⭐⭐ (510)" },
+      { id: "WM03", category: "women", sub: "saree", title: "Designer Georgette Sequence Work Party Saree", img: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop", description: "Designer Georgette Sequence Work Party Saree. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,999", orig: "3,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (319)" },
+      { id: "WM04", category: "women", sub: "saree", title: "Chiffon Printed Floral Casual Daily Saree", img: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&auto=format&fit=crop", description: "Chiffon Printed Floral Casual Daily Saree. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,199", orig: "2,499", disc: "52% off", rating: "⭐⭐⭐⭐☆ (190)" },
+      { id: "WM05", category: "women", sub: "saree", title: "Organza Embroidered Floral Semi-Transparent Saree", img: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop", description: "Organza Embroidered Floral Semi-Transparent Saree. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,599", orig: "5,199", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (245)" },
+      { id: "WM06", category: "women", sub: "gown", title: "Elegant Floral Print Flared Summer Evening Gown", img: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&auto=format&fit=crop", description: "Elegant Floral Print Flared Summer Evening Gown. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,999", orig: "3,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (290)" },
+      { id: "WM07", category: "women", sub: "gown", title: "Net Embroidered Party Wear Long Floor-Length Gown", img: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=600&auto=format&fit=crop", description: "Net Embroidered Party Wear Long Floor-Length Gown. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "3,499", orig: "6,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (412)" },
+      { id: "WM08", category: "women", sub: "gown", title: "Satin Silk Cocktail Slit Evening Gown", img: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&auto=format&fit=crop", description: "Satin Silk Cocktail Slit Evening Gown. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,799", orig: "5,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (180)" },
+      { id: "WM09", category: "women", sub: "gown", title: "Indo-Western Tiered Ruffle Festive Gown", img: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&auto=format&fit=crop", description: "Indo-Western Tiered Ruffle Festive Gown. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,299", orig: "4,599", disc: "50% off", rating: "⭐⭐⭐⭐☆ (145)" },
+      { id: "WM10", category: "women", sub: "gown", title: "Velvet Embroidered Winter Reception Gown", img: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=600&auto=format&fit=crop", description: "Velvet Embroidered Winter Reception Gown. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "3,899", orig: "7,799", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (320)" },
+      { id: "WM11", category: "women", sub: "kurti", title: "Pure Cotton Handcrafted Anarkali Kurti & Pant Set", img: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&auto=format&fit=crop", description: "Pure Cotton Handcrafted Anarkali Kurti & Pant Set. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,649", orig: "3,299", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (419)" },
+      { id: "WM12", category: "women", sub: "kurti", title: "Jaipuri Block Printed Rayon Straight Kurti", img: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop", description: "Jaipuri Block Printed Rayon Straight Kurti. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "899", orig: "1,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (380)" },
+      { id: "WM13", category: "women", sub: "kurti", title: "Chikankari Embroidered Faux Georgette Long Kurta", img: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&auto=format&fit=crop", description: "Chikankari Embroidered Faux Georgette Long Kurta. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,399", orig: "2,799", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (512)" },
+      { id: "WM14", category: "women", sub: "kurti", title: "Designer Festive Sharara Kurta Set with Dupatta", img: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&auto=format&fit=crop", description: "Designer Festive Sharara Kurta Set with Dupatta. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,499", orig: "4,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (275)" },
+      { id: "WM15", category: "women", sub: "kurti", title: "Short Peplum Style Kurti with Dhoti Pants", img: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&auto=format&fit=crop", description: "Short Peplum Style Kurti with Dhoti Pants. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,499", orig: "2,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (198)" },
+      { id: "WM16", category: "women", sub: "western", title: "Chic Casual Western Top with Slim Stretch Fit", img: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&auto=format&fit=crop", description: "Chic Casual Western Top with Slim Stretch Fit. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,399", orig: "2,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (380)" },
+      { id: "WM17", category: "women", sub: "western", title: "Off-Shoulder Puff Sleeve Party Wear Top", img: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=600&auto=format&fit=crop", description: "Off-Shoulder Puff Sleeve Party Wear Top. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,199", orig: "2,399", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (290)" },
+      { id: "WM18", category: "women", sub: "western", title: "High Neck Ribbed Knit Winter Sweater Top", img: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&auto=format&fit=crop", description: "High Neck Ribbed Knit Winter Sweater Top. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,599", orig: "3,199", disc: "50% off", rating: "⭐⭐⭐⭐☆ (165)" },
+      { id: "WM19", category: "women", sub: "western", title: "Satin Wrap-Around Stylish Crop Blouse", img: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=600&auto=format&fit=crop", description: "Satin Wrap-Around Stylish Crop Blouse. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,299", orig: "2,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (210)" },
+      { id: "WM20", category: "women", sub: "western", title: "Casual Oversized Graphic Printed Cotton T-Shirt", img: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&auto=format&fit=crop", description: "Casual Oversized Graphic Printed Cotton T-Shirt. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "799", orig: "1,599", disc: "50% off", rating: "⭐⭐⭐⭐☆ (450)" },
+      { id: "WM21", category: "women", sub: "lehenga", title: "Royal Embroidered Semi-Stitched Velvet Party Lehenga", img: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&auto=format&fit=crop", description: "Royal Embroidered Semi-Stitched Velvet Party Lehenga. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "4,499", orig: "8,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (743)" },
+      { id: "WM22", category: "women", sub: "lehenga", title: "Bridal Heavy Zardozi Work Red Lehenga Choli", img: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop", description: "Bridal Heavy Zardozi Work Red Lehenga Choli. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "7,999", orig: "15,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (512)" },
+      { id: "WM23", category: "women", sub: "lehenga", title: "Pastel Net Sequenced Reception Lehenga", img: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&auto=format&fit=crop", description: "Pastel Net Sequenced Reception Lehenga. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "3,899", orig: "7,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (320)" },
+      { id: "WM24", category: "women", sub: "lehenga", title: "Bandhani Printed Traditional Gujarati Lehenga Set", img: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&auto=format&fit=crop", description: "Bandhani Printed Traditional Gujarati Lehenga Set. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,899", orig: "5,799", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (190)" },
+      { id: "WM25", category: "women", sub: "lehenga", title: "Floral Organza Sangeet Wear Designer Lehenga", img: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&auto=format&fit=crop", description: "Floral Organza Sangeet Wear Designer Lehenga. A premium quality apparel piece, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "3,499", orig: "6,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (230)" },
+      { id: "MN01", category: "men", sub: "shirt", title: "Premium Slim Fit Cotton Formal Dress Shirt", img: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&auto=format&fit=crop", description: "Premium Slim Fit Cotton Formal Dress Shirt. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,199", orig: "2,399", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (489)" },
+      { id: "MN02", category: "men", sub: "shirt", title: "Casual Linen Breathable Summer Shirt", img: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&auto=format&fit=crop", description: "Casual Linen Breathable Summer Shirt. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,299", orig: "2,599", disc: "50% off", rating: "⭐⭐⭐⭐☆ (310)" },
+      { id: "MN03", category: "men", sub: "shirt", title: "Checked Casual Button-Down Regular Fit Shirt", img: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&auto=format&fit=crop", description: "Checked Casual Button-Down Regular Fit Shirt. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "999", orig: "1,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (412)" },
+      { id: "MN04", category: "men", sub: "shirt", title: "Mandarin Collar Cotton Party Wear Shirt", img: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&auto=format&fit=crop", description: "Mandarin Collar Cotton Party Wear Shirt. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,399", orig: "2,799", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (198)" },
+      { id: "MN05", category: "men", sub: "shirt", title: "Denim Casual Washed Blue Shirt for Men", img: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&auto=format&fit=crop", description: "Denim Casual Washed Blue Shirt for Men. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,499", orig: "2,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (275)" },
+      { id: "MN06", category: "men", sub: "blazer", title: "Royal Navy Blue Two-Piece Tuxedo Formal Blazer", img: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&auto=format&fit=crop", description: "Royal Navy Blue Two-Piece Tuxedo Formal Blazer. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "5,999", orig: "11,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (310)" },
+      { id: "MN07", category: "men", sub: "blazer", title: "Classic Black Peak Lapel Business Suit", img: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&auto=format&fit=crop", description: "Classic Black Peak Lapel Business Suit. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "6,499", orig: "12,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (412)" },
+      { id: "MN08", category: "men", sub: "blazer", title: "Checkered Casual Sports Blazer for Men", img: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&auto=format&fit=crop", description: "Checkered Casual Sports Blazer for Men. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "3,899", orig: "7,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (190)" },
+      { id: "MN09", category: "men", sub: "blazer", title: "Velvet Party Wear Maroon Evening Blazer", img: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&auto=format&fit=crop", description: "Velvet Party Wear Maroon Evening Blazer. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "4,599", orig: "9,199", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (220)" },
+      { id: "MN10", category: "men", sub: "blazer", title: "Grey Slim Fit Single-Breasted Office Suit", img: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&auto=format&fit=crop", description: "Grey Slim Fit Single-Breasted Office Suit. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "5,199", orig: "10,399", disc: "50% off", rating: "⭐⭐⭐⭐☆ (165)" },
+      { id: "MN11", category: "men", sub: "kurta", title: "Traditional Designer Silk Blend Kurta Pajama Set", img: "https://images.unsplash.com/photo-1583391733975-08107937536f?w=600&auto=format&fit=crop", description: "Traditional Designer Silk Blend Kurta Pajama Set. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,199", orig: "4,299", disc: "49% off", rating: "⭐⭐⭐⭐☆ (195)" },
+      { id: "MN12", category: "men", sub: "kurta", title: "Pathani Cotton Kurta with Salwar Set", img: "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=600&auto=format&fit=crop", description: "Pathani Cotton Kurta with Salwar Set. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,799", orig: "3,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (240)" },
+      { id: "MN13", category: "men", sub: "kurta", title: "Embroidered Nehru Jacket with Kurta Pyjama", img: "https://images.unsplash.com/photo-1583391733975-08107937536f?w=600&auto=format&fit=crop", description: "Embroidered Nehru Jacket with Kurta Pyjama. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,999", orig: "5,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (310)" },
+      { id: "MN14", category: "men", sub: "kurta", title: "Short Casual Cotton Kurta for Men", img: "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=600&auto=format&fit=crop", description: "Short Casual Cotton Kurta for Men. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "899", orig: "1,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (180)" },
+      { id: "MN15", category: "men", sub: "kurta", title: "Festive Brocade Asymmetric Indo-Western Kurta", img: "https://images.unsplash.com/photo-1583391733975-08107937536f?w=600&auto=format&fit=crop", description: "Festive Brocade Asymmetric Indo-Western Kurta. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,499", orig: "4,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (145)" },
+      { id: "MN16", category: "men", sub: "jacket", title: "Classic Vintage Denim Sherpa Jacket for Men", img: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&auto=format&fit=crop", description: "Classic Vintage Denim Sherpa Jacket for Men. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,499", orig: "4,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (522)" },
+      { id: "MN17", category: "men", sub: "jacket", title: "Faux Leather Biker Moto Jacket", img: "https://images.unsplash.com/photo-1520975954732-35dd22299614?w=600&auto=format&fit=crop", description: "Faux Leather Biker Moto Jacket. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "3,199", orig: "6,399", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (410)" },
+      { id: "MN18", category: "men", sub: "jacket", title: "Waterproof Lightweight Hooded Windbreaker", img: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&auto=format&fit=crop", description: "Waterproof Lightweight Hooded Windbreaker. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,899", orig: "3,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (230)" },
+      { id: "MN19", category: "men", sub: "jacket", title: "Winter Puffer Quilted Warm Jacket", img: "https://images.unsplash.com/photo-1520975954732-35dd22299614?w=600&auto=format&fit=crop", description: "Winter Puffer Quilted Warm Jacket. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,799", orig: "5,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (319)" },
+      { id: "MN20", category: "men", sub: "jacket", title: "Casual Bomber Streetwear Jacket", img: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&auto=format&fit=crop", description: "Casual Bomber Streetwear Jacket. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,999", orig: "3,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (195)" },
+      { id: "MN21", category: "men", sub: "polo", title: "Breathable Pique Cotton Solid Casual Polo T-Shirt", img: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=600&auto=format&fit=crop", description: "Breathable Pique Cotton Solid Casual Polo T-Shirt. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "899", orig: "1,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (367)" },
+      { id: "MN22", category: "men", sub: "polo", title: "Colorblocked Sports Gym Athletic T-Shirt", img: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop", description: "Colorblocked Sports Gym Athletic T-Shirt. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "749", orig: "1,499", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (280)" },
+      { id: "MN23", category: "men", sub: "polo", title: "Striped Premium Cotton Collar Polo Shirt", img: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=600&auto=format&fit=crop", description: "Striped Premium Cotton Collar Polo Shirt. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "999", orig: "1,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (210)" },
+      { id: "MN24", category: "men", sub: "polo", title: "Oversized Heavyweight Cotton Streetwear Tee", img: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop", description: "Oversized Heavyweight Cotton Streetwear Tee. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "849", orig: "1,699", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (415)" },
+      { id: "MN25", category: "men", sub: "polo", title: "V-Neck Slim Fit Casual Cotton T-Shirt", img: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=600&auto=format&fit=crop", description: "V-Neck Slim Fit Casual Cotton T-Shirt. A premium quality menswear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "699", orig: "1,399", disc: "50% off", rating: "⭐⭐⭐⭐☆ (188)" },
+      { id: "SH01", category: "shoes", sub: "formal_shoe", title: "Men's Handcrafted Genuine Leather Oxford Shoes", img: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&auto=format&fit=crop", description: "Men's Handcrafted Genuine Leather Oxford Shoes. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,999", orig: "5,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (412)" },
+      { id: "SH02", category: "shoes", sub: "formal_shoe", title: "Classic Leather Derby Business Dress Shoes", img: "https://images.unsplash.com/photo-1533867617858-e7d9790afd0aa?w=600&auto=format&fit=crop", description: "Classic Leather Derby Business Dress Shoes. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,799", orig: "5,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (280)" },
+      { id: "SH03", category: "shoes", sub: "formal_shoe", title: "Monk Strap Tan Formal Leather Shoes", img: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&auto=format&fit=crop", description: "Monk Strap Tan Formal Leather Shoes. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "3,299", orig: "6,599", disc: "50% off", rating: "⭐⭐⭐⭐☆ (190)" },
+      { id: "SH04", category: "shoes", sub: "formal_shoe", title: "Slip-on Office Formal Brogues", img: "https://images.unsplash.com/photo-1533867617858-e7d9790afd0aa?w=600&auto=format&fit=crop", description: "Slip-on Office Formal Brogues. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,499", orig: "4,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (145)" },
+      { id: "SH05", category: "shoes", sub: "formal_shoe", title: "Glossy Patent Leather Tuxedo Shoes", img: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&auto=format&fit=crop", description: "Glossy Patent Leather Tuxedo Shoes. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "3,599", orig: "7,199", disc: "50% off", rating: "⭐⭐⭐⭐☆ (210)" },
+      { id: "SH06", category: "shoes", sub: "sneaker", title: "All-Day Comfort Lightweight Breathable Sneakers", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop", description: "All-Day Comfort Lightweight Breathable Sneakers. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,299", orig: "4,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (892)" },
+      { id: "SH07", category: "shoes", sub: "sneaker", title: "Retro White Streetwear Casual Sneakers", img: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600&auto=format&fit=crop", description: "Retro White Streetwear Casual Sneakers. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,899", orig: "3,799", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (510)" },
+      { id: "SH08", category: "shoes", sub: "sneaker", title: "Running Sports Mesh Athletic Shoes", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop", description: "Running Sports Mesh Athletic Shoes. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,099", orig: "4,199", disc: "50% off", rating: "⭐⭐⭐⭐☆ (340)" },
+      { id: "SH09", category: "shoes", sub: "sneaker", title: "Chunky Sole Trendy Casual Fashion Sneakers", img: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600&auto=format&fit=crop", description: "Chunky Sole Trendy Casual Fashion Sneakers. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,499", orig: "4,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (225)" },
+      { id: "SH10", category: "shoes", sub: "sneaker", title: "High-Top Canvas Skateboarding Sneakers", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop", description: "High-Top Canvas Skateboarding Sneakers. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,599", orig: "3,199", disc: "50% off", rating: "⭐⭐⭐⭐☆ (180)" },
+      { id: "SH11", category: "shoes", sub: "heel", title: "Women's Elegant Pointed Stiletto High Heels", img: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&auto=format&fit=crop", description: "Women's Elegant Pointed Stiletto High Heels. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,899", orig: "3,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (315)" },
+      { id: "SH12", category: "shoes", sub: "heel", title: "Block Heel Party Wear Strappy Sandals", img: "https://images.unsplash.com/photo-1535043934128-cf0b28d52f95?w=600&auto=format&fit=crop", description: "Block Heel Party Wear Strappy Sandals. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,599", orig: "3,199", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (410)" },
+      { id: "SH13", category: "shoes", sub: "heel", title: "Bridal Crystal Embellished Platform Heels", img: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&auto=format&fit=crop", description: "Bridal Crystal Embellished Platform Heels. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,499", orig: "4,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (210)" },
+      { id: "SH14", category: "shoes", sub: "heel", title: "Kitten Heel Office Wear Comfortable Pumps", img: "https://images.unsplash.com/photo-1535043934128-cf0b28d52f95?w=600&auto=format&fit=crop", description: "Kitten Heel Office Wear Comfortable Pumps. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,399", orig: "2,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (165)" },
+      { id: "SH15", category: "shoes", sub: "heel", title: "Metallic Gold Evening Party Sandals", img: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&auto=format&fit=crop", description: "Metallic Gold Evening Party Sandals. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,799", orig: "3,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (140)" },
+      { id: "SH16", category: "shoes", sub: "jutti", title: "Royal Handcrafted Zari Embroidered Punjabi Jutti", img: "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=600&auto=format&fit=crop", description: "Royal Handcrafted Zari Embroidered Punjabi Jutti. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,299", orig: "2,499", disc: "48% off", rating: "⭐⭐⭐⭐⭐ (240)" },
+      { id: "SH17", category: "shoes", sub: "jutti", title: "Bridal Gold Thread Work Mojari for Women", img: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=600&auto=format&fit=crop", description: "Bridal Gold Thread Work Mojari for Women. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,499", orig: "2,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (190)" },
+      { id: "SH18", category: "shoes", sub: "jutti", title: "Multi-color Thread Phulkari Ethnic Jutti", img: "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=600&auto=format&fit=crop", description: "Multi-color Thread Phulkari Ethnic Jutti. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "999", orig: "1,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (310)" },
+      { id: "SH19", category: "shoes", sub: "jutti", title: "Men's Ethnic Leather Sherwani Mojari", img: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=600&auto=format&fit=crop", description: "Men's Ethnic Leather Sherwani Mojari. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,599", orig: "3,199", disc: "50% off", rating: "⭐⭐⭐⭐☆ (145)" },
+      { id: "SH20", category: "shoes", sub: "jutti", title: "Velvet Beaded Party Wear Ethnic Khussa", img: "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=600&auto=format&fit=crop", description: "Velvet Beaded Party Wear Ethnic Khussa. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,199", orig: "2,399", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (205)" },
+      { id: "SH21", category: "shoes", sub: "loafer", title: "Casual Slip-On Comfort Loafers for Daily Wear", img: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=600&auto=format&fit=crop", description: "Casual Slip-On Comfort Loafers for Daily Wear. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,499", orig: "2,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (198)" },
+      { id: "SH22", category: "shoes", sub: "loafer", title: "Men's Suede Leather Driving Loafers", img: "https://images.unsplash.com/photo-1533867617858-e7d9790afd0aa?w=600&auto=format&fit=crop", description: "Men's Suede Leather Driving Loafers. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,999", orig: "3,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (312)" },
+      { id: "SH23", category: "shoes", sub: "loafer", title: "Tassel Accent Formal Office Loafers", img: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=600&auto=format&fit=crop", description: "Tassel Accent Formal Office Loafers. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,199", orig: "4,399", disc: "50% off", rating: "⭐⭐⭐⭐☆ (180)" },
+      { id: "SH24", category: "shoes", sub: "loafer", title: "Knitted Breathable Summer Casual Loafers", img: "https://images.unsplash.com/photo-1533867617858-e7d9790afd0aa?w=600&auto=format&fit=crop", description: "Knitted Breathable Summer Casual Loafers. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,299", orig: "2,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (245)" },
+      { id: "SH25", category: "shoes", sub: "loafer", title: "Classic Penny Leather Loafers", img: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=600&auto=format&fit=crop", description: "Classic Penny Leather Loafers. A premium quality footwear item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,399", orig: "4,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (160)" },
+      { id: "HD01", category: "decor", sub: "painting", title: "Modern Abstract Canvas Wall Art Painting Set", img: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=600&auto=format&fit=crop", description: "Modern Abstract Canvas Wall Art Painting Set. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,799", orig: "3,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (310)" },
+      { id: "HD02", category: "decor", sub: "painting", title: "Golden Buddha Peaceful Canvas Wall Painting", img: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=600&auto=format&fit=crop", description: "Golden Buddha Peaceful Canvas Wall Painting. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,599", orig: "3,199", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (420)" },
+      { id: "HD03", category: "decor", sub: "painting", title: "Sceneries Landscape Nature Framed Wall Art", img: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=600&auto=format&fit=crop", description: "Sceneries Landscape Nature Framed Wall Art. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,199", orig: "4,399", disc: "50% off", rating: "⭐⭐⭐⭐☆ (190)" },
+      { id: "HD04", category: "decor", sub: "painting", title: "Boho Minimalist Line Art Canvas Panel", img: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=600&auto=format&fit=crop", description: "Boho Minimalist Line Art Canvas Panel. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,299", orig: "2,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (145)" },
+      { id: "HD05", category: "decor", sub: "painting", title: "Multi-Panel Floral Canvas Wall Decor", img: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=600&auto=format&fit=crop", description: "Multi-Panel Floral Canvas Wall Decor. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,499", orig: "4,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (220)" },
+      { id: "HD06", category: "decor", sub: "vase", title: "Nordic Minimalist Ceramic Flower Vase Decor", img: "https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?w=600&auto=format&fit=crop", description: "Nordic Minimalist Ceramic Flower Vase Decor. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "999", orig: "1,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (175)" },
+      { id: "HD07", category: "decor", sub: "vase", title: "Handcrafted Terracotta Rustic Flower Pot", img: "https://images.unsplash.com/photo-1612196808214-b8e1f6145a8c?w=600&auto=format&fit=crop", description: "Handcrafted Terracotta Rustic Flower Pot. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "799", orig: "1,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (210)" },
+      { id: "HD08", category: "decor", sub: "vase", title: "Modern Geometric Glass Table Top Vase", img: "https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?w=600&auto=format&fit=crop", description: "Modern Geometric Glass Table Top Vase. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,199", orig: "2,399", disc: "50% off", rating: "⭐⭐⭐⭐☆ (130)" },
+      { id: "HD09", category: "decor", sub: "vase", title: "Golden Metal Finish Luxury Flower Vase", img: "https://images.unsplash.com/photo-1612196808214-b8e1f6145a8c?w=600&auto=format&fit=crop", description: "Golden Metal Finish Luxury Flower Vase. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,499", orig: "2,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (190)" },
+      { id: "HD10", category: "decor", sub: "vase", title: "White Ceramic Abstract Human Face Vase", img: "https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?w=600&auto=format&fit=crop", description: "White Ceramic Abstract Human Face Vase. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,299", orig: "2,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (310)" },
+      { id: "HD11", category: "decor", sub: "lamp", title: "Warm Ambient Wooden Bedside Table Lamp", img: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=600&auto=format&fit=crop", description: "Warm Ambient Wooden Bedside Table Lamp. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,499", orig: "2,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (420)" },
+      { id: "HD12", category: "decor", sub: "lamp", title: "Vintage Brass Study Desk Reading Lamp", img: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=600&auto=format&fit=crop", description: "Vintage Brass Study Desk Reading Lamp. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,199", orig: "4,399", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (310)" },
+      { id: "HD13", category: "decor", sub: "lamp", title: "Himalayan Natural Crystal Salt Lamp", img: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=600&auto=format&fit=crop", description: "Himalayan Natural Crystal Salt Lamp. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,299", orig: "2,599", disc: "50% off", rating: "⭐⭐⭐⭐☆ (512)" },
+      { id: "HD14", category: "decor", sub: "lamp", title: "Minimalist Fabric Shade Living Room Floor Lamp", img: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=600&auto=format&fit=crop", description: "Minimalist Fabric Shade Living Room Floor Lamp. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "3,499", orig: "6,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (180)" },
+      { id: "HD15", category: "decor", sub: "lamp", title: "LED Touch Sensor Bedside Mood Lamp", img: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=600&auto=format&fit=crop", description: "LED Touch Sensor Bedside Mood Lamp. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "999", orig: "1,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (245)" },
+      { id: "HD16", category: "decor", sub: "idol", title: "Vintage Handcrafted Solid Brass Ganesha Idol", img: "https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=600&auto=format&fit=crop", description: "Vintage Handcrafted Solid Brass Ganesha Idol. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,299", orig: "4,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (650)" },
+      { id: "HD17", category: "decor", sub: "idol", title: "Radiant Brass Nataraja Dancing Lord Shiva Statue", img: "https://images.unsplash.com/photo-1567157577867-05ccb1388e66?w=600&auto=format&fit=crop", description: "Radiant Brass Nataraja Dancing Lord Shiva Statue. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "3,199", orig: "6,399", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (310)" },
+      { id: "HD18", category: "decor", sub: "idol", title: "Laughing Buddha Feng Shui Prosperity Statue", img: "https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=600&auto=format&fit=crop", description: "Laughing Buddha Feng Shui Prosperity Statue. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,499", orig: "2,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (215)" },
+      { id: "HD19", category: "decor", sub: "idol", title: "Radha Krishna Marble Dust Divine Idol", img: "https://images.unsplash.com/photo-1567157577867-05ccb1388e66?w=600&auto=format&fit=crop", description: "Radha Krishna Marble Dust Divine Idol. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "2,799", orig: "5,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (180)" },
+      { id: "HD20", category: "decor", sub: "idol", title: "Brass Tortoise Plate Feng Shui Showpiece", img: "https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=600&auto=format&fit=crop", description: "Brass Tortoise Plate Feng Shui Showpiece. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "999", orig: "1,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (140)" },
+      { id: "HD21", category: "decor", sub: "cushion", title: "Boho Embroidered Cotton Cushion Covers (Set of 5)", img: "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=600&auto=format&fit=crop", description: "Boho Embroidered Cotton Cushion Covers (Set of 5). A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "899", orig: "1,899", disc: "52% off", rating: "⭐⭐⭐⭐☆ (289)" },
+      { id: "HD22", category: "decor", sub: "cushion", title: "Velvet Luxury Solid Color Sofa Cushion Covers", img: "https://images.unsplash.com/photo-1579656381226-5fc0f0100c3b?w=600&auto=format&fit=crop", description: "Velvet Luxury Solid Color Sofa Cushion Covers. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "799", orig: "1,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (340)" },
+      { id: "HD23", category: "decor", sub: "cushion", title: "Geometric Pattern Printed Living Room Throw Pillows", img: "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=600&auto=format&fit=crop", description: "Geometric Pattern Printed Living Room Throw Pillows. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "999", orig: "1,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (190)" },
+      { id: "HD24", category: "decor", sub: "cushion", title: "Mandala Print Traditional Cotton Cushion Cover", img: "https://images.unsplash.com/photo-1579656381226-5fc0f0100c3b?w=600&auto=format&fit=crop", description: "Mandala Print Traditional Cotton Cushion Cover. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "699", orig: "1,399", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (210)" },
+      { id: "HD25", category: "decor", sub: "cushion", title: "Faux Fur Fluffy Cozy Winter Cushion Cases", img: "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=600&auto=format&fit=crop", description: "Faux Fur Fluffy Cozy Winter Cushion Cases. A premium quality home decor item, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,099", orig: "2,199", disc: "50% off", rating: "⭐⭐⭐⭐☆ (165)" },
+      { id: "CM01", category: "cosmetics", sub: "makeup", title: "Matte Finish Long-Lasting Liquid Lipstick Set", img: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=600&auto=format&fit=crop", description: "Matte Finish Long-Lasting Liquid Lipstick Set. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "699", orig: "1,399", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (420)" },
+      { id: "CM02", category: "cosmetics", sub: "makeup", title: "HD Full Coverage Liquid Foundation", img: "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=600&auto=format&fit=crop", description: "HD Full Coverage Liquid Foundation. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "899", orig: "1,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (312)" },
+      { id: "CM03", category: "cosmetics", sub: "makeup", title: "24H Waterproof Eyeliner & Kajal Combo", img: "https://images.unsplash.com/photo-1631730486572-226d1f595b68?w=600&auto=format&fit=crop", description: "24H Waterproof Eyeliner & Kajal Combo. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "399", orig: "799", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (505)" },
+      { id: "CM04", category: "cosmetics", sub: "makeup", title: "Shimmer Eyeshadow Palette - 18 Shades", img: "https://images.unsplash.com/photo-1583241800698-e8ab01c67c58?w=600&auto=format&fit=crop", description: "Shimmer Eyeshadow Palette - 18 Shades. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "999", orig: "1,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (268)" },
+      { id: "CM05", category: "cosmetics", sub: "makeup", title: "Compact Face Powder with Mirror & Puff", img: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=600&auto=format&fit=crop", description: "Compact Face Powder with Mirror & Puff. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "549", orig: "1,099", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (190)" },
+      { id: "CM06", category: "cosmetics", sub: "skincare", title: "Vitamin C Brightening Face Serum", img: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600&auto=format&fit=crop", description: "Vitamin C Brightening Face Serum. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "649", orig: "1,299", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (612)" },
+      { id: "CM07", category: "cosmetics", sub: "skincare", title: "Hyaluronic Acid Hydrating Moisturizer Gel", img: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&auto=format&fit=crop", description: "Hyaluronic Acid Hydrating Moisturizer Gel. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "549", orig: "1,099", disc: "50% off", rating: "⭐⭐⭐⭐☆ (388)" },
+      { id: "CM08", category: "cosmetics", sub: "skincare", title: "Charcoal Deep Cleansing Face Wash", img: "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=600&auto=format&fit=crop", description: "Charcoal Deep Cleansing Face Wash. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "299", orig: "599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (445)" },
+      { id: "CM09", category: "cosmetics", sub: "skincare", title: "SPF 50 PA+++ Sunscreen Lotion", img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=600&auto=format&fit=crop", description: "SPF 50 PA+++ Sunscreen Lotion. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "449", orig: "899", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (530)" },
+      { id: "CM10", category: "cosmetics", sub: "skincare", title: "Under Eye Cream for Dark Circles & Puffiness", img: "https://images.unsplash.com/photo-1598440947619-2c35cc9dab30?w=600&auto=format&fit=crop", description: "Under Eye Cream for Dark Circles & Puffiness. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "599", orig: "1,199", disc: "50% off", rating: "⭐⭐⭐⭐☆ (270)" },
+      { id: "CM11", category: "cosmetics", sub: "haircare", title: "Argan Oil Nourishing Hair Serum", img: "https://images.unsplash.com/photo-1626784215021-2e39ccf971cd?w=600&auto=format&fit=crop", description: "Argan Oil Nourishing Hair Serum. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "499", orig: "999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (356)" },
+      { id: "CM12", category: "cosmetics", sub: "haircare", title: "Anti-Dandruff Keratin Shampoo & Conditioner Set", img: "https://images.unsplash.com/photo-1556228720-6d0f6d3f1e4c?w=600&auto=format&fit=crop", description: "Anti-Dandruff Keratin Shampoo & Conditioner Set. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "649", orig: "1,299", disc: "50% off", rating: "⭐⭐⭐⭐☆ (298)" },
+      { id: "CM13", category: "cosmetics", sub: "haircare", title: "Onion Hair Oil for Hair Fall Control", img: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=600&auto=format&fit=crop", description: "Onion Hair Oil for Hair Fall Control. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "349", orig: "699", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (610)" },
+      { id: "CM14", category: "cosmetics", sub: "haircare", title: "Deep Conditioning Hair Mask Treatment", img: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&auto=format&fit=crop", description: "Deep Conditioning Hair Mask Treatment. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "549", orig: "1,099", disc: "50% off", rating: "⭐⭐⭐⭐☆ (215)" },
+      { id: "CM15", category: "cosmetics", sub: "haircare", title: "Heat Protectant Hair Styling Spray", img: "https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=600&auto=format&fit=crop", description: "Heat Protectant Hair Styling Spray. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "399", orig: "799", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (178)" },
+      { id: "CM16", category: "cosmetics", sub: "fragrance", title: "Luxury Eau De Parfum for Women", img: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=600&auto=format&fit=crop", description: "Luxury Eau De Parfum for Women. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,299", orig: "2,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (480)" },
+      { id: "CM17", category: "cosmetics", sub: "fragrance", title: "Woody Musk Cologne for Men", img: "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=600&auto=format&fit=crop", description: "Woody Musk Cologne for Men. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,199", orig: "2,399", disc: "50% off", rating: "⭐⭐⭐⭐☆ (325)" },
+      { id: "CM18", category: "cosmetics", sub: "fragrance", title: "Travel Size Perfume Gift Set (Pack of 4)", img: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=600&auto=format&fit=crop", description: "Travel Size Perfume Gift Set (Pack of 4). A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "899", orig: "1,799", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (240)" },
+      { id: "CM19", category: "cosmetics", sub: "fragrance", title: "Long Lasting Deodorant Body Spray Combo", img: "https://images.unsplash.com/photo-1556228852-80b6e2645a58?w=600&auto=format&fit=crop", description: "Long Lasting Deodorant Body Spray Combo. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "349", orig: "699", disc: "50% off", rating: "⭐⭐⭐⭐☆ (410)" },
+      { id: "CM20", category: "cosmetics", sub: "fragrance", title: "Scented Body Mist for Everyday Freshness", img: "https://images.unsplash.com/photo-1595425964272-6d8cbee1cb9b?w=600&auto=format&fit=crop", description: "Scented Body Mist for Everyday Freshness. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "449", orig: "899", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (195)" },
+      { id: "CM21", category: "cosmetics", sub: "tools", title: "Professional Makeup Brush Set (12 Pieces)", img: "https://images.unsplash.com/photo-1522335789203-9bcd63e73dfe?w=600&auto=format&fit=crop", description: "Professional Makeup Brush Set (12 Pieces). A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "599", orig: "1,199", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (338)" },
+      { id: "CM22", category: "cosmetics", sub: "tools", title: "Rose Quartz Facial Roller & Gua Sha Set", img: "https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?w=600&auto=format&fit=crop", description: "Rose Quartz Facial Roller & Gua Sha Set. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "449", orig: "899", disc: "50% off", rating: "⭐⭐⭐⭐☆ (222)" },
+      { id: "CM23", category: "cosmetics", sub: "tools", title: "Cordless Rechargeable Hair Straightener", img: "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=600&auto=format&fit=crop", description: "Cordless Rechargeable Hair Straightener. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,499", orig: "2,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (285)" },
+      { id: "CM24", category: "cosmetics", sub: "tools", title: "Beauty Blender Makeup Sponge (Set of 3)", img: "https://images.unsplash.com/photo-1596704017254-9b121068fb31?w=600&auto=format&fit=crop", description: "Beauty Blender Makeup Sponge (Set of 3). A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "299", orig: "599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (402)" },
+      { id: "CM25", category: "cosmetics", sub: "tools", title: "LED Vanity Mirror with Touch Control Lighting", img: "https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?w=600&auto=format&fit=crop", description: "LED Vanity Mirror with Touch Control Lighting. A premium quality beauty product, carefully crafted with attention to detail for style, comfort and durability. Backed by Osani.com's 7-day easy return policy and worldwide shipping.", extraImages: [], videoUrl: "", price: "1,199", orig: "2,399", disc: "50% off", rating: "⭐⭐⭐⭐☆ (160)" }
+    ];
+
+    let editingProductId = null;
+    let liveProducts = [];       // cached copy synced live from Firestore
+    let firestoreConnected = false;
+
+    // ---------------------- REAL-TIME CLOUD SYNC ----------------------
+    // This single listener keeps every open admin tab AND the live website
+    // in sync automatically — no manual "sync" button needed anymore.
+    function initInventorySync() {
+      db.collection("products").onSnapshot((snapshot) => {
+        liveProducts = [];
+        snapshot.forEach(doc => liveProducts.push(doc.data()));
+        firestoreConnected = true;
+        document.getElementById('syncStatusBadge').innerText = '● Live — synced to cloud';
+        document.getElementById('syncStatusBadge').classList.remove('offline');
+        filterAdminInventory();
+      }, (error) => {
+        firestoreConnected = false;
+        document.getElementById('syncStatusBadge').innerText = '● Offline / connection error';
+        document.getElementById('syncStatusBadge').classList.add('offline');
+        console.error("Firestore connection failed:", error);
+      });
+    }
+
+    // ---------------------- ORDERS & FULFILLMENT SYNC (3 carts) ----------------------
+    // Each order can contain items for more than one store, so orders live
+    // in every cart tab that at least one of their items belongs to. The
+    // table always shows only THAT store's items/subtotal for the order,
+    // and the status/action columns reflect that store's own fulfillment
+    // progress (order.storeStatus.<store>), not the whole order.
+    let liveOrders = [];
+    let activeOrdersTab = 'printrove';
+
+    // Printrove keeps its full multi-stage lifecycle (matches Printrove's
+    // own order states). BapStore and My Store are simpler since they're
+    // handled manually from this admin panel rather than by an external API.
+    const STATUS_LABELS_BY_STORE = {
+      printrove: {
+        not_applicable: "—", pending: "Pending", sent_to_printrove: "Sent to Printrove",
+        in_production: "In Production", shipped: "Shipped", delivered: "Delivered",
+        cancelled: "Cancelled", failed: "Failed"
+      },
+      bapstore: {
+        not_applicable: "—", pending: "Pending", sent_manually: "Sent to BapStore",
+        fulfilled: "Fulfilled", cancelled: "Cancelled"
+      },
+      mystore: {
+        not_applicable: "—", pending: "Pending", fulfilled: "Fulfilled", cancelled: "Cancelled"
+      }
+    };
+    const TAB_LABELS = { printrove: '🖨 Printrove', bapstore: '📦 BapStore', mystore: '🏬 My Store' };
+
+    function initOrdersSync() {
+      db.collection("orders").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+        liveOrders = [];
+        snapshot.forEach(doc => liveOrders.push({ id: doc.id, ...doc.data() }));
+        document.getElementById('ordersSyncStatusBadge').innerText = '● Live — synced to cloud';
+        document.getElementById('ordersSyncStatusBadge').classList.remove('offline');
+        renderOrdersTable();
+      }, (error) => {
+        document.getElementById('ordersSyncStatusBadge').innerText = '● Offline / connection error';
+        document.getElementById('ordersSyncStatusBadge').classList.add('offline');
+        console.error("Orders sync failed:", error);
+      });
+    }
+
+    // An item's store: explicit tag if set, else "printrove" for legacy
+    // items that have a variantId (old pre-tagging behavior), else "mystore".
+    function itemStore(item) {
+      return item.store || (item.variantId ? 'printrove' : 'mystore');
+    }
+
+    function ordersForStore(store) {
+      return liveOrders.filter(o => (o.items || []).some(i => itemStore(i) === store));
+    }
+
+    function switchOrdersTab(store) {
+      activeOrdersTab = store;
+      ['printrove', 'bapstore', 'mystore'].forEach(s => {
+        const btn = document.getElementById('ordersTabBtn-' + s);
+        btn.style.background = s === store ? '#3d282b' : '#777';
+      });
+      document.getElementById('ordersColItems').innerText = 'Items (' + TAB_LABELS[store] + ')';
+      document.getElementById('ordersColTracking').style.display = store === 'printrove' ? '' : 'none';
+
+      const select = document.getElementById('filterOrderStatus');
+      const labels = STATUS_LABELS_BY_STORE[store];
+      select.innerHTML = '<option value="all">All</option>' +
+        Object.keys(labels).filter(k => k !== 'not_applicable').map(k => `<option value="${k}">${labels[k]}</option>`).join('');
+
+      renderOrdersTable();
+    }
+
+    function renderOrdersTable() {
+      const store = activeOrdersTab;
+      const filter = document.getElementById('filterOrderStatus').value;
+      const tbody = document.getElementById('adminOrdersTableBody');
+
+      ['printrove', 'bapstore', 'mystore'].forEach(s => {
+        document.getElementById('ordersTabCount-' + s).innerText = '(' + ordersForStore(s).length + ')';
+      });
+
+      let filtered = ordersForStore(store);
+      if (filter !== 'all') {
+        filtered = filtered.filter(o => ((o.storeStatus && o.storeStatus[store]) || 'pending') === filter);
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#777;">No orders in this cart.</td></tr>';
+        return;
+      }
+
+      const labels = STATUS_LABELS_BY_STORE[store];
+
+      tbody.innerHTML = filtered.map(o => {
+        const storeItems = (o.items || []).filter(i => itemStore(i) === store);
+        const itemsSummary = storeItems.map(i => `${i.title || i.productId} x${i.quantity}`).join('<br>');
+        const subtotal = storeItems.reduce((sum, i) => sum + (i.unitPrice || 0) * (i.quantity || 1), 0);
+        const storeStatusVal = (o.storeStatus && o.storeStatus[store]) || 'pending';
+        const statusLabel = labels[storeStatusVal] || storeStatusVal;
+        const statusColor = storeStatusVal === 'failed' ? '#c0392b' : (storeStatusVal === 'delivered' || storeStatusVal === 'fulfilled' ? '#03a685' : '#3d282b');
+        const tracking = store === 'printrove'
+          ? (o.trackingNumber ? `${o.trackingNumber}${o.courierName ? '<br><i>' + o.courierName + '</i>' : ''}` : '—')
+          : '—';
+        const errorNote = (store === 'printrove' && o.printroveError)
+          ? `<div style="color:#c0392b; font-size:11px; margin-top:4px;" title="${(o.printroveError + '').replace(/"/g, '&quot;')}">⚠ ${(o.printroveError + '').slice(0, 60)}${(o.printroveError + '').length > 60 ? '...' : ''}</div>`
+          : '';
+
+        let actionBtn = '';
+        if (store === 'printrove' && (storeStatusVal === 'failed' || storeStatusVal === 'pending')) {
+          actionBtn = `<button class="edit-btn" onclick="retryOrderPush('${o.id}')">Push to Printrove</button>`;
+        } else if (store === 'bapstore' && storeStatusVal === 'pending') {
+          actionBtn = `<button class="edit-btn" onclick="markStoreOrderStatus('${o.id}','bapstore','sent_manually')">Mark Sent to BapStore</button>`;
+        } else if (store === 'bapstore' && storeStatusVal === 'sent_manually') {
+          actionBtn = `<button class="edit-btn" onclick="markStoreOrderStatus('${o.id}','bapstore','fulfilled')">Mark Fulfilled</button>`;
+        } else if (store === 'mystore' && storeStatusVal === 'pending') {
+          actionBtn = `<button class="edit-btn" onclick="markStoreOrderStatus('${o.id}','mystore','fulfilled')">Mark Fulfilled</button>`;
+        }
+
+        return `
+          <tr>
+            <td><b>${o.id}</b></td>
+            <td>${(o.customer && o.customer.name) || '—'}<br><span style="font-size:11px;color:#777;">${(o.customer && o.customer.phone) || ''}</span></td>
+            <td style="font-size:12px;">${itemsSummary}</td>
+            <td>₹${subtotal.toLocaleString('en-IN')}${o.cod ? '<br><span style="font-size:11px;color:#777;">COD</span>' : ''}</td>
+            <td style="color:${statusColor};font-weight:bold;">${statusLabel}${errorNote}</td>
+            <td style="font-size:12px;">${tracking}</td>
+            <td>${actionBtn}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Calls the retryPushOrder Cloud Function (functions/index.js) which
+    // re-attempts sending this order's Printrove-tagged items to Printrove.
+    function retryOrderPush(orderId) {
+      if (!confirm(`Push order ${orderId} to Printrove now?`)) return;
+      const retryCall = cloudFunctions.httpsCallable('retryPushOrder');
+      retryCall({ orderId })
+        .then((result) => {
+          alert(`✅ Order pushed to Printrove successfully! Printrove Order ID: ${result.data.printroveOrderId}`);
+        })
+        .catch((err) => {
+          alert(`❌ Failed to push order: ${err.message}\n\nMake sure the retryPushOrder Cloud Function is deployed.`);
+        });
+    }
+
+    // BapStore/My Store have no API integration here, so their status is
+    // just tracked manually from this panel (direct Firestore write — admin
+    // is signed in, and firestore.rules allows admin updates to orders).
+    function markStoreOrderStatus(orderId, store, newStatus) {
+      if (!confirm(`Mark this order's ${TAB_LABELS[store]} items as "${STATUS_LABELS_BY_STORE[store][newStatus]}"?`)) return;
+      db.collection("orders").doc(orderId).update({ ['storeStatus.' + store]: newStatus })
+        .catch(err => alert('❌ Failed to update: ' + err.message));
+    }
+
+    function updateFulfillmentFieldVisibility() {
+      const store = document.getElementById('newFulfillmentStore').value;
+      document.getElementById('printroveVariantField').style.display = store === 'printrove' ? '' : 'none';
+      document.getElementById('bapstoreProductIdField').style.display = store === 'bapstore' ? '' : 'none';
+    }
+
+    function updateAdminSubOptions() {
+      const catSelect = document.getElementById('newCategory').value;
+      const subSelect = document.getElementById('newSubCategory');
+      subSelect.innerHTML = '';
+      
+      const subs = subCategoriesMap[catSelect] || [];
+      subs.forEach(sub => {
+        const opt = document.createElement('option');
+        opt.value = sub.code;
+        opt.innerText = sub.name;
+        subSelect.appendChild(opt);
+      });
+    }
+
+    function calculateDiscount() {
+      const priceStr = document.getElementById('newPrice').value.replace(/,/g, '').trim();
+      const origStr = document.getElementById('newOrig').value.replace(/,/g, '').trim();
+
+      const sellingPrice = parseFloat(priceStr);
+      const originalPrice = parseFloat(origStr);
+
+      if (isNaN(sellingPrice) || isNaN(originalPrice) || originalPrice <= 0) {
+        alert("Please enter a valid Selling Price and Original MRP!");
+        return;
+      }
+
+      if (sellingPrice >= originalPrice) {
+        alert("Selling Price must be lower than the Original MRP!");
+        return;
+      }
+
+      const discountAmount = originalPrice - sellingPrice;
+      const discountPercent = Math.round((discountAmount / originalPrice) * 100);
+
+      document.getElementById('newDisc').value = `${discountPercent}% off`;
+      alert(`Discount calculated: ${discountPercent}% off`);
+    }
+
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('newImg').value = e.target.result;
+          alert("Main image uploaded successfully!");
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function getStoredProducts() {
+      // If the cloud hasn't returned any products yet (first-ever run, empty DB),
+      // fall back to the built-in starter catalog just for display purposes.
+      return liveProducts.length > 0 ? liveProducts : initialProductsDB;
+    }
+
+    async function saveProductToCloud(product) {
+      return db.collection("products").doc(product.id).set(product);
+    }
+
+    async function deleteProductFromCloud(productId) {
+      return db.collection("products").doc(productId).delete();
+    }
+
+    function seedInitialProducts() {
+      if (liveProducts.length > 0) {
+        alert("The cloud database already has products in it. Seeding again would overwrite them by ID — only do this on a brand-new, empty database.");
+      }
+      if (!confirm("Upload the built-in starter catalog (" + initialProductsDB.length + " products) to the cloud database now?")) return;
+
+      const batch = db.batch();
+      initialProductsDB.forEach(p => {
+        batch.set(db.collection("products").doc(p.id), p);
+      });
+      batch.commit()
+        .then(() => alert("✅ Starter catalog uploaded! It will now appear on the website on every device."))
+        .catch(err => alert("❌ Upload failed: " + err.message));
+    }
+
+    function renderAdminTable(items) {
+      const tbody = document.getElementById('adminProductTableBody');
+      tbody.innerHTML = '';
+
+      if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #777;">No products found in inventory.</td></tr>';
+        return;
+      }
+
+      const STORE_BADGES = {
+        printrove: '<span style="color:#3d282b;">🖨 Printrove</span>',
+        bapstore: '<span style="color:#b76e79;">📦 BapStore</span>',
+        mystore: '<span style="color:#03a685;">🏬 My Store</span>'
+      };
+
+      items.forEach((item) => {
+        const tr = document.createElement('tr');
+        const store = item.store || (item.printroveVariantId ? 'printrove' : 'mystore');
+        const variantWarning = (store === 'printrove' && !item.printroveVariantId)
+          ? ' <span title="No Printrove Variant ID set — this product cannot be ordered yet" style="color:#c0392b; font-size:11px;">⚠ not linked</span>'
+          : '';
+        tr.innerHTML = `
+          <td><img src="${item.img}" alt="Img" onerror="this.src='https://via.placeholder.com/45'"></td>
+          <td><b>${item.id}</b></td>
+          <td>${item.category.toUpperCase()} / <i>${item.sub}</i></td>
+          <td>${item.title}${variantWarning}</td>
+          <td style="font-size:12px;">${STORE_BADGES[store] || store}</td>
+          <td>₹${item.price}</td>
+          <td>
+            <button class="edit-btn" onclick="editProduct('${item.id}')">Edit</button>
+            <button class="delete-btn" onclick="deleteProduct('${item.id}')">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterAdminInventory() {
+      const filterCat = document.getElementById('filterCategory').value;
+      const db = getStoredProducts();
+      
+      if (filterCat === 'all') {
+        renderAdminTable(db);
+      } else {
+        const filtered = db.filter(p => p.category === filterCat);
+        renderAdminTable(filtered);
+      }
+    }
+
+    function resetProductForm() {
+      document.getElementById('newId').value = '';
+      document.getElementById('newId').disabled = false;
+      document.getElementById('newTitle').value = '';
+      document.getElementById('newImg').value = '';
+      document.getElementById('newExtraImages').value = '';
+      document.getElementById('newVideoUrl').value = '';
+      document.getElementById('newPrice').value = '';
+      document.getElementById('newOrig').value = '';
+      document.getElementById('newDisc').value = '';
+      document.getElementById('newDesc').value = '';
+      document.getElementById('newFulfillmentStore').value = 'printrove';
+      document.getElementById('newPrintroveVariantId').value = '';
+      document.getElementById('newBapstoreProductId').value = '';
+      updateFulfillmentFieldVisibility();
+      document.getElementById('imageFileLoader').value = '';
+      document.getElementById('currentImgPreview').style.display = 'none';
+      document.getElementById('currentImgPreview').src = '';
+      document.getElementById('newCategory').selectedIndex = 0;
+      updateAdminSubOptions();
+    }
+
+    function addNewProduct() {
+      const id = document.getElementById('newId').value.trim();
+      const category = document.getElementById('newCategory').value;
+      const sub = document.getElementById('newSubCategory').value;
+      const title = document.getElementById('newTitle').value.trim();
+      const img = document.getElementById('newImg').value.trim();
+      const extraImagesRaw = document.getElementById('newExtraImages').value.trim();
+      const videoUrl = document.getElementById('newVideoUrl').value.trim();
+      const price = document.getElementById('newPrice').value.trim();
+      const orig = document.getElementById('newOrig').value.trim();
+      const disc = document.getElementById('newDisc').value.trim();
+      const description = document.getElementById('newDesc').value.trim();
+      const fulfillmentStore = document.getElementById('newFulfillmentStore').value;
+      const printroveVariantId = document.getElementById('newPrintroveVariantId').value.trim();
+      const bapstoreProductId = document.getElementById('newBapstoreProductId').value.trim();
+
+      if (!id || !title || !img || !price || !orig || !description) {
+        alert("Please fill in all required fields, upload an image, and add a description!");
+        return;
+      }
+
+      const extraImages = extraImagesRaw ? extraImagesRaw.split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
+      const db2 = getStoredProducts();
+
+      if (editingProductId) {
+        const existing = db2.find(p => p.id === editingProductId);
+        if (!existing) {
+          alert("Product not found — it may have already been deleted.");
+          cancelEdit();
+          return;
+        }
+        const updatedProduct = {
+          ...existing,
+          category, sub, title, img, description, extraImages, videoUrl,
+          price, orig, disc: disc || "50% off",
+          store: fulfillmentStore,
+          printroveVariantId: printroveVariantId || null,
+          bapstoreProductId: bapstoreProductId || null
+        };
+        saveProductToCloud(updatedProduct)
+          .then(() => {
+            alert("Product updated successfully and synced with the website on all devices!");
+            cancelEdit();
+          })
+          .catch(err => alert("❌ Update failed: " + err.message));
+      } else {
+        if (db2.some(p => p.id === id)) {
+          alert("A product with this ID already exists. Please use a unique Product ID.");
+          return;
+        }
+        const newProd = {
+          id, category, sub, title, img, description, extraImages, videoUrl,
+          price, orig, disc: disc || "50% off",
+          rating: "⭐⭐⭐⭐⭐ (100)",
+          store: fulfillmentStore,
+          printroveVariantId: printroveVariantId || null,
+          bapstoreProductId: bapstoreProductId || null
+        };
+        saveProductToCloud(newProd)
+          .then(() => {
+            alert("Product added successfully and synced with the website on all devices!");
+            resetProductForm();
+          })
+          .catch(err => alert("❌ Add failed: " + err.message));
+      }
+    }
+
+    function editProduct(productId) {
+      const db = getStoredProducts();
+      const prod = db.find(p => p.id === productId);
+      if (!prod) {
+        alert("Product not found.");
+        return;
+      }
+
+      editingProductId = productId;
+
+      document.getElementById('newId').value = prod.id;
+      document.getElementById('newId').disabled = true;
+      document.getElementById('newCategory').value = prod.category;
+      updateAdminSubOptions();
+      document.getElementById('newSubCategory').value = prod.sub;
+      document.getElementById('newTitle').value = prod.title;
+      document.getElementById('newImg').value = prod.img;
+      document.getElementById('currentImgPreview').src = prod.img;
+      document.getElementById('currentImgPreview').style.display = 'inline-block';
+      document.getElementById('newExtraImages').value = (prod.extraImages || []).join(', ');
+      document.getElementById('newVideoUrl').value = prod.videoUrl || '';
+      document.getElementById('newPrice').value = prod.price;
+      document.getElementById('newOrig').value = prod.orig;
+      document.getElementById('newDisc').value = prod.disc;
+      document.getElementById('newDesc').value = prod.description || '';
+      document.getElementById('newFulfillmentStore').value = prod.store || (prod.printroveVariantId ? 'printrove' : 'mystore');
+      document.getElementById('newPrintroveVariantId').value = prod.printroveVariantId || '';
+      document.getElementById('newBapstoreProductId').value = prod.bapstoreProductId || '';
+      updateFulfillmentFieldVisibility();
+
+      document.getElementById('formSectionTitle').innerText = 'Edit Product';
+      document.getElementById('editingBanner').style.display = 'block';
+      document.getElementById('editingProductIdLabel').innerText = prod.id;
+      document.getElementById('submitProductBtn').innerText = 'Update Product';
+      document.getElementById('cancelEditBtn').style.display = 'inline-block';
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+      editingProductId = null;
+      resetProductForm();
+      document.getElementById('formSectionTitle').innerText = 'Add New Product with Built-in Discount Calculator';
+      document.getElementById('editingBanner').style.display = 'none';
+      document.getElementById('submitProductBtn').innerText = 'Add Product to Inventory';
+      document.getElementById('cancelEditBtn').style.display = 'none';
+    }
+
+    function deleteProduct(productId) {
+      if (confirm("Are you sure you want to delete this product? This removes it for everyone, on every device.")) {
+        deleteProductFromCloud(productId)
+          .then(() => {
+            if (editingProductId === productId) {
+              cancelEdit();
+            }
+          })
+          .catch(err => alert("❌ Delete failed: " + err.message));
+      }
+    }
+
+    window.onload = function() {
+      updateAdminSubOptions();
+      // filterAdminInventory() now runs automatically once Firestore
+      // connects and delivers the first snapshot (see initInventorySync).
+    };
+  </script>
+
 </body>
 </html>
