@@ -404,9 +404,25 @@
         </div>
 
         <div class="form-group">
+          <label>Fulfillment Store *</label>
+          <select id="newFulfillmentStore" onchange="updateFulfillmentFieldVisibility()">
+            <option value="printrove">🖨 Printrove (print-on-demand)</option>
+            <option value="bapstore">📦 BapStore (dropship)</option>
+            <option value="mystore">🏬 My Store (self-fulfilled)</option>
+          </select>
+          <div style="font-size:11px;color:#777;margin-top:3px;">Which cart this product's orders land in on the Orders tab below.</div>
+        </div>
+
+        <div class="form-group" id="printroveVariantField">
           <label>Printrove Variant ID</label>
           <input type="text" id="newPrintroveVariantId" placeholder="e.g. 460021">
           <div style="font-size:11px;color:#777;margin-top:3px;">From Printrove's Product Library API. Required before this product can be ordered — checkout blocks items without one.</div>
+        </div>
+
+        <div class="form-group" id="bapstoreProductIdField" style="display:none;">
+          <label>BapStore Product/SKU ID</label>
+          <input type="text" id="newBapstoreProductId" placeholder="e.g. BAP-10432">
+          <div style="font-size:11px;color:#777;margin-top:3px;">Your reference ID on BapStore.com, for matching orders when you fulfill them there.</div>
         </div>
 
       </div>
@@ -415,25 +431,21 @@
     </div>
 
 
-    <!-- Orders & Printrove Fulfillment Section -->
+    <!-- Orders & Fulfillment Section: three carts, one per store -->
     <div class="section-box">
       <h3>
-        <span>Orders & Printrove Fulfillment</span>
+        <span>Orders & Fulfillment</span>
         <span id="ordersSyncStatusBadge" class="sync-status offline">● Connecting...</span>
       </h3>
+      <div class="filter-bar" style="gap:8px;">
+        <button type="button" class="admin-btn" id="ordersTabBtn-printrove" onclick="switchOrdersTab('printrove')" style="width:auto;">🖨 Printrove Cart <span id="ordersTabCount-printrove">(0)</span></button>
+        <button type="button" class="admin-btn" id="ordersTabBtn-bapstore" onclick="switchOrdersTab('bapstore')" style="width:auto;background:#777;">📦 BapStore Cart <span id="ordersTabCount-bapstore">(0)</span></button>
+        <button type="button" class="admin-btn" id="ordersTabBtn-mystore" onclick="switchOrdersTab('mystore')" style="width:auto;background:#777;">🏬 My Store Cart <span id="ordersTabCount-mystore">(0)</span></button>
+      </div>
       <div class="filter-bar">
         <div class="form-group" style="flex: 1; margin-bottom: 0;">
           <label>Filter by Status:</label>
-          <select id="filterOrderStatus" onchange="renderOrdersTable()">
-            <option value="all">All Orders</option>
-            <option value="pending">Pending</option>
-            <option value="sent_to_printrove">Sent to Printrove</option>
-            <option value="in_production">In Production</option>
-            <option value="shipped">Shipped</option>
-            <option value="delivered">Delivered</option>
-            <option value="failed">Failed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+          <select id="filterOrderStatus" onchange="renderOrdersTable()"></select>
         </div>
       </div>
       <table>
@@ -441,10 +453,10 @@
           <tr>
             <th>Order ID</th>
             <th>Customer</th>
-            <th>Items</th>
-            <th>Total</th>
+            <th id="ordersColItems">Items (this store)</th>
+            <th>Subtotal</th>
             <th>Status</th>
-            <th>Tracking</th>
+            <th id="ordersColTracking">Tracking</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -483,6 +495,7 @@
             <th>ID</th>
             <th>Category / Sub</th>
             <th>Product Title</th>
+            <th>Store</th>
             <th>Price</th>
             <th>Action</th>
           </tr>
@@ -549,6 +562,7 @@
         document.getElementById('adminLoginOverlay').style.display = 'none';
         document.getElementById('adminContent').style.display = 'block';
         initInventorySync();
+        switchOrdersTab('printrove');
         initOrdersSync();
       } else {
         document.getElementById('adminLoginOverlay').style.display = 'flex';
@@ -779,18 +793,33 @@
       });
     }
 
-    // ---------------------- ORDERS & PRINTROVE SYNC ----------------------
+    // ---------------------- ORDERS & FULFILLMENT SYNC (3 carts) ----------------------
+    // Each order can contain items for more than one store, so orders live
+    // in every cart tab that at least one of their items belongs to. The
+    // table always shows only THAT store's items/subtotal for the order,
+    // and the status/action columns reflect that store's own fulfillment
+    // progress (order.storeStatus.<store>), not the whole order.
     let liveOrders = [];
+    let activeOrdersTab = 'printrove';
 
-    const ORDER_STATUS_LABELS = {
-      pending: "Pending",
-      sent_to_printrove: "Sent to Printrove",
-      in_production: "In Production",
-      shipped: "Shipped",
-      delivered: "Delivered",
-      cancelled: "Cancelled",
-      failed: "Failed"
+    // Printrove keeps its full multi-stage lifecycle (matches Printrove's
+    // own order states). BapStore and My Store are simpler since they're
+    // handled manually from this admin panel rather than by an external API.
+    const STATUS_LABELS_BY_STORE = {
+      printrove: {
+        not_applicable: "—", pending: "Pending", sent_to_printrove: "Sent to Printrove",
+        in_production: "In Production", shipped: "Shipped", delivered: "Delivered",
+        cancelled: "Cancelled", failed: "Failed"
+      },
+      bapstore: {
+        not_applicable: "—", pending: "Pending", sent_manually: "Sent to BapStore",
+        fulfilled: "Fulfilled", cancelled: "Cancelled"
+      },
+      mystore: {
+        not_applicable: "—", pending: "Pending", fulfilled: "Fulfilled", cancelled: "Cancelled"
+      }
     };
+    const TAB_LABELS = { printrove: '🖨 Printrove', bapstore: '📦 BapStore', mystore: '🏬 My Store' };
 
     function initOrdersSync() {
       db.collection("orders").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
@@ -806,46 +835,95 @@
       });
     }
 
+    // An item's store: explicit tag if set, else "printrove" for legacy
+    // items that have a variantId (old pre-tagging behavior), else "mystore".
+    function itemStore(item) {
+      return item.store || (item.variantId ? 'printrove' : 'mystore');
+    }
+
+    function ordersForStore(store) {
+      return liveOrders.filter(o => (o.items || []).some(i => itemStore(i) === store));
+    }
+
+    function switchOrdersTab(store) {
+      activeOrdersTab = store;
+      ['printrove', 'bapstore', 'mystore'].forEach(s => {
+        const btn = document.getElementById('ordersTabBtn-' + s);
+        btn.style.background = s === store ? '#3d282b' : '#777';
+      });
+      document.getElementById('ordersColItems').innerText = 'Items (' + TAB_LABELS[store] + ')';
+      document.getElementById('ordersColTracking').style.display = store === 'printrove' ? '' : 'none';
+
+      const select = document.getElementById('filterOrderStatus');
+      const labels = STATUS_LABELS_BY_STORE[store];
+      select.innerHTML = '<option value="all">All</option>' +
+        Object.keys(labels).filter(k => k !== 'not_applicable').map(k => `<option value="${k}">${labels[k]}</option>`).join('');
+
+      renderOrdersTable();
+    }
+
     function renderOrdersTable() {
+      const store = activeOrdersTab;
       const filter = document.getElementById('filterOrderStatus').value;
       const tbody = document.getElementById('adminOrdersTableBody');
-      const filtered = filter === 'all' ? liveOrders : liveOrders.filter(o => o.status === filter);
+
+      ['printrove', 'bapstore', 'mystore'].forEach(s => {
+        document.getElementById('ordersTabCount-' + s).innerText = '(' + ordersForStore(s).length + ')';
+      });
+
+      let filtered = ordersForStore(store);
+      if (filter !== 'all') {
+        filtered = filtered.filter(o => ((o.storeStatus && o.storeStatus[store]) || 'pending') === filter);
+      }
 
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#777;">No orders found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#777;">No orders in this cart.</td></tr>';
         return;
       }
 
+      const labels = STATUS_LABELS_BY_STORE[store];
+
       tbody.innerHTML = filtered.map(o => {
-        const itemsSummary = (o.items || []).map(i => `${i.title || i.productId} x${i.quantity}`).join('<br>');
-        const statusLabel = ORDER_STATUS_LABELS[o.status] || o.status || 'Unknown';
-        const statusColor = o.status === 'failed' ? '#c0392b' : (o.status === 'delivered' ? '#03a685' : '#3d282b');
-        const tracking = o.trackingNumber
-          ? `${o.trackingNumber}${o.courierName ? '<br><i>' + o.courierName + '</i>' : ''}`
+        const storeItems = (o.items || []).filter(i => itemStore(i) === store);
+        const itemsSummary = storeItems.map(i => `${i.title || i.productId} x${i.quantity}`).join('<br>');
+        const subtotal = storeItems.reduce((sum, i) => sum + (i.unitPrice || 0) * (i.quantity || 1), 0);
+        const storeStatusVal = (o.storeStatus && o.storeStatus[store]) || 'pending';
+        const statusLabel = labels[storeStatusVal] || storeStatusVal;
+        const statusColor = storeStatusVal === 'failed' ? '#c0392b' : (storeStatusVal === 'delivered' || storeStatusVal === 'fulfilled' ? '#03a685' : '#3d282b');
+        const tracking = store === 'printrove'
+          ? (o.trackingNumber ? `${o.trackingNumber}${o.courierName ? '<br><i>' + o.courierName + '</i>' : ''}` : '—')
           : '—';
-        const retryBtn = (o.status === 'failed' || o.status === 'pending')
-          ? `<button class="edit-btn" onclick="retryOrderPush('${o.id}')">Push to Printrove</button>`
-          : '';
-        const errorNote = o.printroveError
+        const errorNote = (store === 'printrove' && o.printroveError)
           ? `<div style="color:#c0392b; font-size:11px; margin-top:4px;" title="${(o.printroveError + '').replace(/"/g, '&quot;')}">⚠ ${(o.printroveError + '').slice(0, 60)}${(o.printroveError + '').length > 60 ? '...' : ''}</div>`
           : '';
+
+        let actionBtn = '';
+        if (store === 'printrove' && (storeStatusVal === 'failed' || storeStatusVal === 'pending')) {
+          actionBtn = `<button class="edit-btn" onclick="retryOrderPush('${o.id}')">Push to Printrove</button>`;
+        } else if (store === 'bapstore' && storeStatusVal === 'pending') {
+          actionBtn = `<button class="edit-btn" onclick="markStoreOrderStatus('${o.id}','bapstore','sent_manually')">Mark Sent to BapStore</button>`;
+        } else if (store === 'bapstore' && storeStatusVal === 'sent_manually') {
+          actionBtn = `<button class="edit-btn" onclick="markStoreOrderStatus('${o.id}','bapstore','fulfilled')">Mark Fulfilled</button>`;
+        } else if (store === 'mystore' && storeStatusVal === 'pending') {
+          actionBtn = `<button class="edit-btn" onclick="markStoreOrderStatus('${o.id}','mystore','fulfilled')">Mark Fulfilled</button>`;
+        }
 
         return `
           <tr>
             <td><b>${o.id}</b></td>
             <td>${(o.customer && o.customer.name) || '—'}<br><span style="font-size:11px;color:#777;">${(o.customer && o.customer.phone) || ''}</span></td>
             <td style="font-size:12px;">${itemsSummary}</td>
-            <td>₹${(o.retailPrice || 0).toLocaleString('en-IN')}${o.cod ? '<br><span style="font-size:11px;color:#777;">COD</span>' : ''}</td>
+            <td>₹${subtotal.toLocaleString('en-IN')}${o.cod ? '<br><span style="font-size:11px;color:#777;">COD</span>' : ''}</td>
             <td style="color:${statusColor};font-weight:bold;">${statusLabel}${errorNote}</td>
             <td style="font-size:12px;">${tracking}</td>
-            <td>${retryBtn}</td>
+            <td>${actionBtn}</td>
           </tr>
         `;
       }).join('');
     }
 
     // Calls the retryPushOrder Cloud Function (functions/index.js) which
-    // re-attempts sending this order to Printrove using the current data.
+    // re-attempts sending this order's Printrove-tagged items to Printrove.
     function retryOrderPush(orderId) {
       if (!confirm(`Push order ${orderId} to Printrove now?`)) return;
       const retryCall = cloudFunctions.httpsCallable('retryPushOrder');
@@ -856,6 +934,21 @@
         .catch((err) => {
           alert(`❌ Failed to push order: ${err.message}\n\nMake sure the retryPushOrder Cloud Function is deployed.`);
         });
+    }
+
+    // BapStore/My Store have no API integration here, so their status is
+    // just tracked manually from this panel (direct Firestore write — admin
+    // is signed in, and firestore.rules allows admin updates to orders).
+    function markStoreOrderStatus(orderId, store, newStatus) {
+      if (!confirm(`Mark this order's ${TAB_LABELS[store]} items as "${STATUS_LABELS_BY_STORE[store][newStatus]}"?`)) return;
+      db.collection("orders").doc(orderId).update({ ['storeStatus.' + store]: newStatus })
+        .catch(err => alert('❌ Failed to update: ' + err.message));
+    }
+
+    function updateFulfillmentFieldVisibility() {
+      const store = document.getElementById('newFulfillmentStore').value;
+      document.getElementById('printroveVariantField').style.display = store === 'printrove' ? '' : 'none';
+      document.getElementById('bapstoreProductIdField').style.display = store === 'bapstore' ? '' : 'none';
     }
 
     function updateAdminSubOptions() {
@@ -942,20 +1035,28 @@
       tbody.innerHTML = '';
 
       if (items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #777;">No products found in inventory.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #777;">No products found in inventory.</td></tr>';
         return;
       }
 
+      const STORE_BADGES = {
+        printrove: '<span style="color:#3d282b;">🖨 Printrove</span>',
+        bapstore: '<span style="color:#b76e79;">📦 BapStore</span>',
+        mystore: '<span style="color:#03a685;">🏬 My Store</span>'
+      };
+
       items.forEach((item) => {
         const tr = document.createElement('tr');
-        const variantWarning = item.printroveVariantId
-          ? ''
-          : ' <span title="No Printrove Variant ID set — this product cannot be ordered yet" style="color:#c0392b; font-size:11px;">⚠ not linked</span>';
+        const store = item.store || (item.printroveVariantId ? 'printrove' : 'mystore');
+        const variantWarning = (store === 'printrove' && !item.printroveVariantId)
+          ? ' <span title="No Printrove Variant ID set — this product cannot be ordered yet" style="color:#c0392b; font-size:11px;">⚠ not linked</span>'
+          : '';
         tr.innerHTML = `
           <td><img src="${item.img}" alt="Img" onerror="this.src='https://via.placeholder.com/45'"></td>
           <td><b>${item.id}</b></td>
           <td>${item.category.toUpperCase()} / <i>${item.sub}</i></td>
           <td>${item.title}${variantWarning}</td>
+          <td style="font-size:12px;">${STORE_BADGES[store] || store}</td>
           <td>₹${item.price}</td>
           <td>
             <button class="edit-btn" onclick="editProduct('${item.id}')">Edit</button>
@@ -989,7 +1090,10 @@
       document.getElementById('newOrig').value = '';
       document.getElementById('newDisc').value = '';
       document.getElementById('newDesc').value = '';
+      document.getElementById('newFulfillmentStore').value = 'printrove';
       document.getElementById('newPrintroveVariantId').value = '';
+      document.getElementById('newBapstoreProductId').value = '';
+      updateFulfillmentFieldVisibility();
       document.getElementById('imageFileLoader').value = '';
       document.getElementById('currentImgPreview').style.display = 'none';
       document.getElementById('currentImgPreview').src = '';
@@ -1009,7 +1113,9 @@
       const orig = document.getElementById('newOrig').value.trim();
       const disc = document.getElementById('newDisc').value.trim();
       const description = document.getElementById('newDesc').value.trim();
+      const fulfillmentStore = document.getElementById('newFulfillmentStore').value;
       const printroveVariantId = document.getElementById('newPrintroveVariantId').value.trim();
+      const bapstoreProductId = document.getElementById('newBapstoreProductId').value.trim();
 
       if (!id || !title || !img || !price || !orig || !description) {
         alert("Please fill in all required fields, upload an image, and add a description!");
@@ -1030,7 +1136,9 @@
           ...existing,
           category, sub, title, img, description, extraImages, videoUrl,
           price, orig, disc: disc || "50% off",
-          printroveVariantId: printroveVariantId || null
+          store: fulfillmentStore,
+          printroveVariantId: printroveVariantId || null,
+          bapstoreProductId: bapstoreProductId || null
         };
         saveProductToCloud(updatedProduct)
           .then(() => {
@@ -1047,7 +1155,9 @@
           id, category, sub, title, img, description, extraImages, videoUrl,
           price, orig, disc: disc || "50% off",
           rating: "⭐⭐⭐⭐⭐ (100)",
-          printroveVariantId: printroveVariantId || null
+          store: fulfillmentStore,
+          printroveVariantId: printroveVariantId || null,
+          bapstoreProductId: bapstoreProductId || null
         };
         saveProductToCloud(newProd)
           .then(() => {
@@ -1083,7 +1193,10 @@
       document.getElementById('newOrig').value = prod.orig;
       document.getElementById('newDisc').value = prod.disc;
       document.getElementById('newDesc').value = prod.description || '';
+      document.getElementById('newFulfillmentStore').value = prod.store || (prod.printroveVariantId ? 'printrove' : 'mystore');
       document.getElementById('newPrintroveVariantId').value = prod.printroveVariantId || '';
+      document.getElementById('newBapstoreProductId').value = prod.bapstoreProductId || '';
+      updateFulfillmentFieldVisibility();
 
       document.getElementById('formSectionTitle').innerText = 'Edit Product';
       document.getElementById('editingBanner').style.display = 'block';

@@ -2753,6 +2753,7 @@
     const ORDER_STATUS_LABELS = {
       pending: "Processing",
       sent_to_printrove: "Confirmed",
+      partially_fulfilled: "Confirmed — Processing",
       in_production: "In Production",
       shipped: "Shipped",
       delivered: "Delivered",
@@ -2853,10 +2854,11 @@
         return;
       }
 
-      // Every cart item needs a Printrove variant ID (set per-product in the
-      // admin panel's "Printrove Variant ID" field) — without it, Printrove
-      // has no way to know which physical product/size/color to print & ship.
-      const missingVariant = cartItems.find(item => !item.printroveVariantId);
+      // Only items tagged for the Printrove store need a variant ID (set
+      // per-product in the admin panel) — without it, Printrove has no way
+      // to know which physical product/size/color to print & ship.
+      // BapStore and My Store items don't need one.
+      const missingVariant = cartItems.find(item => (item.store || 'mystore') === 'printrove' && !item.printroveVariantId);
       if (missingVariant) {
         showCheckoutFormError(`"${missingVariant.title}" isn't linked to a Printrove product yet. Please contact support — this item can't be fulfilled until an admin sets its Printrove Variant ID.`);
         return;
@@ -2872,8 +2874,19 @@
 
       const retailPrice = calculateCartTotal();
 
+      // Each cart item carries its fulfillment "store" tag (set per-product
+      // in admin.html: Printrove / BapStore / My Store). Untagged legacy
+      // products default to My Store so nothing silently vanishes.
+      const storesInCart = new Set(cartItems.map(item => item.store || 'mystore'));
+      const storeStatus = {
+        printrove: storesInCart.has('printrove') ? 'pending' : 'not_applicable',
+        bapstore: storesInCart.has('bapstore') ? 'pending' : 'not_applicable',
+        mystore: storesInCart.has('mystore') ? 'pending' : 'not_applicable'
+      };
+
       const orderDoc = {
-        status: "pending", // the Cloud Function flips this to sent_to_printrove / failed
+        status: "pending", // the Cloud Function flips this to sent_to_printrove / failed / partially_fulfilled
+        storeStatus: storeStatus,
         printroveOrderId: null,
         trackingNumber: null,
         courierName: null,
@@ -2893,9 +2906,10 @@
           country: country
         },
         items: cartItems.map(item => ({
-          variantId: item.printroveVariantId,
+          variantId: item.printroveVariantId || null,
           quantity: item.qty || 1,
           isPlain: false,
+          store: item.store || 'mystore',
           // Kept for display in the admin Orders tab only — not sent to Printrove.
           productId: item.id,
           title: item.title,
@@ -2931,8 +2945,14 @@
         `;
         cartItems = [];
       } catch (err) {
-        console.error("Failed to save order:", err);
-        showCheckoutFormError("Something went wrong placing your order. Please try again.");
+        // Logged with the Firebase error code so you can diagnose exactly
+        // why checkout failed from the browser console (F12 → Console).
+        // Common culprits: "permission-denied" = firestore.rules blocking
+        // the write (re-deploy firestore.rules), "unavailable"/network
+        // errors = connectivity, or the Firebase config in this file not
+        // matching your actual project.
+        console.error(`Failed to save order [${err.code || 'no-code'}]:`, err.message || err);
+        showCheckoutFormError(`Something went wrong placing your order${err.code ? ' (' + err.code + ')' : ''}. Please try again, or contact support if this keeps happening.`);
       } finally {
         if (placeOrderBtn) { placeOrderBtn.disabled = false; placeOrderBtn.innerText = 'Place Order'; }
       }
