@@ -1933,6 +1933,10 @@
     </div>
   </footer>
 
+  <!-- Firebase SDK (compat build - works with plain script tags, no build step needed) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
   <script>
     let productsDB = [
       /* ================= JEWELRY (25 items: 5 per sub) ================= */
@@ -2121,21 +2125,61 @@
       { id: "CM25", category: "cosmetics", sub: "tools", title: "LED Vanity Mirror with Touch Control Lighting", img: "https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?w=600&auto=format&fit=crop", price: "1,199", orig: "2,399", disc: "50% off", rating: "⭐⭐⭐⭐☆ (160)" }
     ];
 
-    // Agar admin.html ne is browser ke localStorage me products save kiye hain,
-    // to unhe use karo instead of the hardcoded list above.
-    (function loadProductsFromAdmin() {
-      try {
-        const saved = localStorage.getItem('osani_products_db');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            productsDB = parsed;
-          }
-        }
-      } catch (e) {
-        console.warn('Admin products load fail, using default list:', e);
+    // =====================================================================
+    // FIREBASE CONFIG — paste your own project's config here.
+    // Get this from: Firebase Console → Project Settings → General → Your apps → Web app
+    // This SAME config must also be pasted into admin.html so both files
+    // talk to the same cloud database.
+    // =====================================================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyARcy6Pr85p8-4UVbNBh1LILR4nfVS3JIU",
+      authDomain: "osani-84e2e.firebaseapp.com",
+      projectId: "osani-84e2e",
+      storageBucket: "osani-84e2e.firebasestorage.app",
+      messagingSenderId: "178272531084",
+      appId: "1:178272531084:web:70e6c019b03fe79f3041a9"
+    };
+
+    let db = null;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+    } catch (e) {
+      console.warn("Firebase not configured yet — showing built-in catalog only.", e);
+    }
+
+    // Tracks whatever the visitor is currently looking at, so that when live
+    // product data arrives (or changes) from the cloud, we can refresh the
+    // same view instead of yanking them back to the homepage.
+    let currentViewState = { type: 'collection', cat: 'jewelry', title: 'Fashion Jewelry Collection' };
+
+    function refreshCurrentView() {
+      // Don't disturb someone who is reading a product detail page.
+      if (document.getElementById('productDetailView').style.display === 'block') return;
+      const s = currentViewState;
+      if (s.type === 'collection') loadCollection(s.cat, s.title);
+      else if (s.type === 'subdivision') loadSubDivision(s.cat, s.sub, s.title);
+      else if (s.type === 'search') {
+        document.getElementById('searchInput').value = s.q;
+        doSearch();
       }
-    })();
+    }
+
+    // Real-time cloud sync: whenever admin.html adds/edits/deletes a product,
+    // this fires automatically on every open device/tab — no refresh needed.
+    if (db) {
+      db.collection("products").onSnapshot((snapshot) => {
+        const liveProducts = [];
+        snapshot.forEach(doc => liveProducts.push(doc.data()));
+        if (liveProducts.length > 0) {
+          productsDB.length = 0;
+          productsDB.push(...liveProducts);
+          refreshCurrentView();
+        }
+      }, (error) => {
+        console.warn('Firestore sync unavailable, using built-in catalog:', error);
+      });
+    }
 
     let cartItems = [ { ...productsDB[0], qty: 1 }, { ...productsDB[1], qty: 1 } ];
     let wishlistItems = [];
@@ -2477,6 +2521,7 @@
     }
 
     function loadCollection(cat, title) {
+      currentViewState = { type: 'collection', cat, title };
       backToCatalog();
       document.getElementById('collectionHeading').innerText = `Showing results for: ${title}`;
       if (cat === 'all') {
@@ -2488,6 +2533,7 @@
     }
 
     function loadSubDivision(cat, subCode, title) {
+      currentViewState = { type: 'subdivision', cat, sub: subCode, title };
       backToCatalog();
       document.getElementById('collectionHeading').innerText = `Showing results for: ${title}`;
       const list = productsDB.filter(p => p.category === cat && p.sub === subCode);
@@ -2497,6 +2543,7 @@
     function doSearch() {
       const q = document.getElementById('searchInput').value.toLowerCase().trim();
       if (!q) return;
+      currentViewState = { type: 'search', q };
       backToCatalog();
       document.getElementById('collectionHeading').innerText = `Showing results for: "${q}"`;
       const matched = productsDB.filter(p => 

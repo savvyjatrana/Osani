@@ -232,13 +232,97 @@
       font-size: 13px;
       margin-bottom: 12px;
     }
+
+    .sync-status {
+      font-size: 11px;
+      font-weight: normal;
+      padding: 3px 10px;
+      border-radius: 10px;
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .sync-status.offline {
+      background: #fdecea;
+      color: #c62828;
+    }
+
+    /* Admin Login Gate */
+    #adminLoginOverlay {
+      position: fixed;
+      inset: 0;
+      background: #3d282b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .login-box {
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      width: 320px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    .login-box h2 {
+      color: #b76e79;
+      margin-bottom: 4px;
+    }
+    .login-box p {
+      font-size: 12px;
+      color: #777;
+      margin-bottom: 16px;
+    }
+    .login-box input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #b76e79;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    .login-box button {
+      width: 100%;
+      padding: 10px;
+      background: #b76e79;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .login-box button:hover { background: #a35a64; }
+    .login-error {
+      color: #cc0c39;
+      font-size: 12px;
+      margin-top: 8px;
+      display: none;
+    }
+    #adminContent { display: none; }
   </style>
 </head>
 <body>
 
+  <!-- Admin Login Gate (Firebase Authentication) -->
+  <div id="adminLoginOverlay">
+    <div class="login-box">
+      <h2>🔒 Admin Login</h2>
+      <p>OSANI.COM Inventory Control Panel</p>
+      <input type="email" id="adminEmail" placeholder="Admin Email">
+      <input type="password" id="adminPassword" placeholder="Password">
+      <button onclick="adminLogin()">Login</button>
+      <div class="login-error" id="loginError">Invalid email or password.</div>
+    </div>
+  </div>
+
+  <div id="adminContent">
+
   <header class="admin-header">
-    <h1>OSANI.COM - Admin Inventory Control</h1>
-    <a href="index.html" style="color: #f3e6e8; font-size: 13px; text-decoration: underline;">← Back to Website</a>
+    <h1>OSANI.COM - Admin Inventory Control <span class="sync-status offline" id="syncStatusBadge">Connecting...</span></h1>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <a href="index.html" style="color: #f3e6e8; font-size: 13px; text-decoration: underline;">← Back to Website</a>
+      <button class="cancel-edit-btn" style="margin:0;" onclick="adminLogout()">Logout</button>
+    </div>
   </header>
 
   <div class="container">
@@ -262,6 +346,7 @@
             <option value="men">Men's Clothing</option>
             <option value="shoes">Shoes & Footwear</option>
             <option value="decor">Home Decor</option>
+            <option value="cosmetics">Cosmetics & Beauty</option>
           </select>
         </div>
 
@@ -327,8 +412,8 @@
     <!-- Inventory Filter & List Section -->
     <div class="section-box">
       <h3>
-        <span>Live Inventory Management (Synced with Website)</span>
-        <button class="reset-btn" onclick="syncDatabase()">🔄 Sync Database</button>
+        <span>Live Inventory Management (Real-Time Cloud Sync)</span>
+        <button class="reset-btn" onclick="seedInitialProducts()">☁️ Upload Starter Catalog (first-time only)</button>
       </h3>
       
       <div class="filter-bar">
@@ -341,6 +426,7 @@
             <option value="men">Men's Clothing</option>
             <option value="shoes">Shoes & Footwear</option>
             <option value="decor">Home Decor</option>
+            <option value="cosmetics">Cosmetics & Beauty</option>
           </select>
         </div>
       </div>
@@ -363,6 +449,65 @@
     </div>
 
   </div>
+
+  </div> <!-- /#adminContent -->
+
+  <!-- Firebase SDK (compat build - works with plain <script> tags, no build step needed) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    // =====================================================================
+    // FIREBASE CONFIG — paste your own project's config here.
+    // Get this from: Firebase Console → Project Settings → General → Your apps → Web app
+    // This SAME config must also be pasted into index.html so both files
+    // talk to the same cloud database.
+    // =====================================================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyARcy6Pr85p8-4UVbNBh1LILR4nfVS3JIU",
+      authDomain: "osani-84e2e.firebaseapp.com",
+      projectId: "osani-84e2e",
+      storageBucket: "osani-84e2e.firebasestorage.app",
+      messagingSenderId: "178272531084",
+      appId: "1:178272531084:web:70e6c019b03fe79f3041a9"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // ---------------------- ADMIN LOGIN (Firebase Auth) ----------------------
+    // Create the admin's email/password once in:
+    // Firebase Console → Authentication → Sign-in method → enable "Email/Password"
+    // Firebase Console → Authentication → Users → Add user
+    function adminLogin() {
+      const email = document.getElementById('adminEmail').value.trim();
+      const password = document.getElementById('adminPassword').value;
+      document.getElementById('loginError').style.display = 'none';
+
+      auth.signInWithEmailAndPassword(email, password)
+        .catch((error) => {
+          document.getElementById('loginError').innerText = error.message;
+          document.getElementById('loginError').style.display = 'block';
+        });
+    }
+
+    function adminLogout() {
+      auth.signOut();
+    }
+
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        document.getElementById('adminLoginOverlay').style.display = 'none';
+        document.getElementById('adminContent').style.display = 'block';
+        initInventorySync();
+      } else {
+        document.getElementById('adminLoginOverlay').style.display = 'flex';
+        document.getElementById('adminContent').style.display = 'none';
+      }
+    });
+  </script>
 
   <script>
     const subCategoriesMap = {
@@ -400,6 +545,13 @@
         { code: 'lamp', name: 'Lamps & Lighting' },
         { code: 'idol', name: 'Brass Idols & Statues' },
         { code: 'cushion', name: 'Cushions & Rugs' }
+      ],
+      cosmetics: [
+        { code: 'makeup', name: 'Makeup Essentials' },
+        { code: 'skincare', name: 'Skincare & Face Care' },
+        { code: 'haircare', name: 'Haircare Products' },
+        { code: 'fragrance', name: 'Perfumes & Fragrances' },
+        { code: 'tools', name: 'Beauty Tools & Accessories' }
       ]
     };
 
@@ -413,6 +565,27 @@
     ];
 
     let editingProductId = null;
+    let liveProducts = [];       // cached copy synced live from Firestore
+    let firestoreConnected = false;
+
+    // ---------------------- REAL-TIME CLOUD SYNC ----------------------
+    // This single listener keeps every open admin tab AND the live website
+    // in sync automatically — no manual "sync" button needed anymore.
+    function initInventorySync() {
+      db.collection("products").onSnapshot((snapshot) => {
+        liveProducts = [];
+        snapshot.forEach(doc => liveProducts.push(doc.data()));
+        firestoreConnected = true;
+        document.getElementById('syncStatusBadge').innerText = '● Live — synced to cloud';
+        document.getElementById('syncStatusBadge').classList.remove('offline');
+        filterAdminInventory();
+      }, (error) => {
+        firestoreConnected = false;
+        document.getElementById('syncStatusBadge').innerText = '● Offline / connection error';
+        document.getElementById('syncStatusBadge').classList.add('offline');
+        console.error("Firestore connection failed:", error);
+      });
+    }
 
     function updateAdminSubOptions() {
       const catSelect = document.getElementById('newCategory').value;
@@ -465,23 +638,32 @@
     }
 
     function getStoredProducts() {
-      const saved = localStorage.getItem('osani_products_db');
-      if (!saved) {
-        localStorage.setItem('osani_products_db', JSON.stringify(initialProductsDB));
-        return initialProductsDB;
+      // If the cloud hasn't returned any products yet (first-ever run, empty DB),
+      // fall back to the built-in starter catalog just for display purposes.
+      return liveProducts.length > 0 ? liveProducts : initialProductsDB;
+    }
+
+    async function saveProductToCloud(product) {
+      return db.collection("products").doc(product.id).set(product);
+    }
+
+    async function deleteProductFromCloud(productId) {
+      return db.collection("products").doc(productId).delete();
+    }
+
+    function seedInitialProducts() {
+      if (liveProducts.length > 0) {
+        alert("The cloud database already has products in it. Seeding again would overwrite them by ID — only do this on a brand-new, empty database.");
       }
-      return JSON.parse(saved);
-    }
+      if (!confirm("Upload the built-in starter catalog (" + initialProductsDB.length + " products) to the cloud database now?")) return;
 
-    function saveStoredProducts(list) {
-      localStorage.setItem('osani_products_db', JSON.stringify(list));
-    }
-
-    function syncDatabase() {
-      const current = getStoredProducts();
-      saveStoredProducts(current);
-      filterAdminInventory();
-      alert("Database synced successfully!");
+      const batch = db.batch();
+      initialProductsDB.forEach(p => {
+        batch.set(db.collection("products").doc(p.id), p);
+      });
+      batch.commit()
+        .then(() => alert("✅ Starter catalog uploaded! It will now appear on the website on every device."))
+        .catch(err => alert("❌ Upload failed: " + err.message));
     }
 
     function renderAdminTable(items) {
@@ -559,56 +741,43 @@
       }
 
       const extraImages = extraImagesRaw ? extraImagesRaw.split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
-
-      let db = getStoredProducts();
+      const db2 = getStoredProducts();
 
       if (editingProductId) {
-        const index = db.findIndex(p => p.id === editingProductId);
-        if (index === -1) {
+        const existing = db2.find(p => p.id === editingProductId);
+        if (!existing) {
           alert("Product not found — it may have already been deleted.");
           cancelEdit();
           return;
         }
-        db[index] = {
-          ...db[index],
-          category: category,
-          sub: sub,
-          title: title,
-          img: img,
-          description: description,
-          extraImages: extraImages,
-          videoUrl: videoUrl,
-          price: price,
-          orig: orig,
-          disc: disc || "50% off"
+        const updatedProduct = {
+          ...existing,
+          category, sub, title, img, description, extraImages, videoUrl,
+          price, orig, disc: disc || "50% off"
         };
-        saveStoredProducts(db);
-        alert("Product updated successfully and synced with the website!");
-        cancelEdit();
+        saveProductToCloud(updatedProduct)
+          .then(() => {
+            alert("Product updated successfully and synced with the website on all devices!");
+            cancelEdit();
+          })
+          .catch(err => alert("❌ Update failed: " + err.message));
       } else {
+        if (db2.some(p => p.id === id)) {
+          alert("A product with this ID already exists. Please use a unique Product ID.");
+          return;
+        }
         const newProd = {
-          id: id,
-          category: category,
-          sub: sub,
-          title: title,
-          img: img,
-          description: description,
-          extraImages: extraImages,
-          videoUrl: videoUrl,
-          price: price,
-          orig: orig,
-          disc: disc || "50% off",
+          id, category, sub, title, img, description, extraImages, videoUrl,
+          price, orig, disc: disc || "50% off",
           rating: "⭐⭐⭐⭐⭐ (100)"
         };
-
-        db.unshift(newProd);
-        saveStoredProducts(db);
-
-        alert("Product added successfully and synced with the website!");
-        resetProductForm();
+        saveProductToCloud(newProd)
+          .then(() => {
+            alert("Product added successfully and synced with the website on all devices!");
+            resetProductForm();
+          })
+          .catch(err => alert("❌ Add failed: " + err.message));
       }
-
-      filterAdminInventory();
     }
 
     function editProduct(productId) {
@@ -656,20 +825,21 @@
     }
 
     function deleteProduct(productId) {
-      if (confirm("Are you sure you want to delete this product?")) {
-        let db = getStoredProducts();
-        db = db.filter(p => p.id !== productId);
-        saveStoredProducts(db);
-        if (editingProductId === productId) {
-          cancelEdit();
-        }
-        filterAdminInventory();
+      if (confirm("Are you sure you want to delete this product? This removes it for everyone, on every device.")) {
+        deleteProductFromCloud(productId)
+          .then(() => {
+            if (editingProductId === productId) {
+              cancelEdit();
+            }
+          })
+          .catch(err => alert("❌ Delete failed: " + err.message));
       }
     }
 
     window.onload = function() {
       updateAdminSubOptions();
-      filterAdminInventory();
+      // filterAdminInventory() now runs automatically once Firestore
+      // connects and delivers the first snapshot (see initInventorySync).
     };
   </script>
 
