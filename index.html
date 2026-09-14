@@ -1618,7 +1618,7 @@
           <button class="place-order-btn" id="loginSignupBtn" onclick="switchAuthTab('login')" style="margin-bottom: 14px; background: #b76e79; margin-top: 0;">LOGIN / SIGNUP</button>
           
           <div style="font-size: 13px; color: #555; border-top: 1px solid #e6d3d6; padding-top: 10px;">
-            <p style="cursor: pointer; padding: 6px 0;" onclick="showNotification('Orders', 'No active orders found.')">📦 Orders</p>
+            <p style="cursor: pointer; padding: 6px 0;" onclick="openMyOrdersModal()">📦 Orders</p>
             <p style="cursor: pointer; padding: 6px 0;" onclick="closeProfileModal(); openWishlistModal();">🤍 Wishlist</p>
             <p style="cursor: pointer; padding: 6px 0;" onclick="showNotification('Saved Addresses', 'No saved addresses found.')">📍 Saved Addresses</p>
             <p id="logoutOption" style="cursor: pointer; padding: 6px 0; color: #cc0c39; display: none;" onclick="handleLogout()">🚪 Logout</p>
@@ -1681,6 +1681,24 @@
     </div>
   </div>
 
+  <div class="checkout-modal-overlay" id="myOrdersModal">
+    <div class="checkout-modal" style="max-width: 460px;">
+      <div class="modal-header">
+        <h3>📦 Track My Order</h3>
+        <button class="close-modal-btn" onclick="closeMyOrdersModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Order ID (from your confirmation screen)</label>
+          <input type="text" id="trackOrderIdInput" placeholder="e.g. aB3xY9pQ...">
+        </div>
+        <button class="place-order-btn" onclick="lookupOrderById()" style="margin-bottom:14px;">Track Order</button>
+        <div id="myOrdersList" style="max-height: 260px; overflow-y: auto;"></div>
+        <button class="place-order-btn" onclick="closeMyOrdersModal()" style="background:#535766;">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Myntra Style Checkout / Bag Modal -->
   <div class="checkout-modal-overlay" id="checkoutModal">
     <div class="checkout-modal">
@@ -1733,13 +1751,49 @@
             <input type="text" id="custName" placeholder="e.g. Ramesh Kumar">
           </div>
           <div class="form-group">
-            <label>Shipping Address & Country *</label>
-            <textarea id="custAddr" rows="2" placeholder="House no, Street, City, Pin/Zip Code, Country"></textarea>
+            <label>Email (for order updates)</label>
+            <input type="email" id="custEmail" placeholder="you@example.com">
+          </div>
+          <div class="form-group">
+            <label>Address Line 1 *</label>
+            <input type="text" id="custAddr1" placeholder="House / Flat No., Street">
+          </div>
+          <div class="form-group">
+            <label>Address Line 2 *</label>
+            <input type="text" id="custAddr2" placeholder="Area, Landmark">
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <div class="form-group" style="flex:1;">
+              <label>City</label>
+              <input type="text" id="custCity" placeholder="e.g. Chennai">
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label>State</label>
+              <input type="text" id="custState" placeholder="e.g. Tamil Nadu">
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <div class="form-group" style="flex:1;">
+              <label>Pincode / ZIP *</label>
+              <input type="text" id="custPincode" placeholder="e.g. 600001">
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label>Country *</label>
+              <select id="custCountry">
+                <option value="India" selected>India</option>
+                <option value="United States">United States</option>
+                <option value="United Kingdom">United Kingdom</option>
+                <option value="Canada">Canada</option>
+                <option value="United Arab Emirates">United Arab Emirates</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
           </div>
           <div class="form-group">
             <label>Contact Phone / WhatsApp *</label>
-            <input type="text" id="custPhone" placeholder="+91 9876543210">
+            <input type="text" id="custPhone" placeholder="10-digit mobile number, e.g. 9876543210">
           </div>
+          <div id="checkoutFormError" style="display:none; color:#c0392b; font-size:12px; margin-bottom:10px;"></div>
 
           <div class="payment-methods">
             <label style="font-size: 12px; font-weight: bold; margin-bottom: 6px; display: block;">Select Secure Payment Gateway:</label>
@@ -2675,8 +2729,14 @@
       document.getElementById('bagItemsView').style.display = 'none';
       document.getElementById('shippingFormView').style.display = 'block';
       document.getElementById('custName').value = currentUser ? currentUser.name : '';
-      document.getElementById('custAddr').value = '';
+      document.getElementById('custEmail').value = currentUser ? currentUser.email : '';
+      document.getElementById('custAddr1').value = '';
+      document.getElementById('custAddr2').value = '';
+      document.getElementById('custCity').value = '';
+      document.getElementById('custState').value = '';
+      document.getElementById('custPincode').value = '';
       document.getElementById('custPhone').value = '';
+      document.getElementById('checkoutFormError').style.display = 'none';
     }
 
     function backToBagView() {
@@ -2688,42 +2748,194 @@
       document.getElementById('checkoutModal').style.display = 'none';
     }
 
-    function processPayment() {
-      const name = document.getElementById('custName').value.trim();
-      const addr = document.getElementById('custAddr').value.trim();
-      const phone = document.getElementById('custPhone').value.trim();
-      const method = document.querySelector('input[name="payMethod"]:checked').value;
+    // Computes the real numeric order total directly from cart data (not by
+    // re-parsing the displayed "₹x,xxx" string), so it's safe to send to Printrove.
+    const ORDER_STATUS_LABELS = {
+      pending: "Processing",
+      sent_to_printrove: "Confirmed",
+      in_production: "In Production",
+      shipped: "Shipped",
+      delivered: "Delivered",
+      cancelled: "Cancelled",
+      failed: "Processing Issue — our team has been notified"
+    };
 
-      if (!name || !addr || !phone) {
-        showNotification("Missing Information", "Please fill in your full name, shipping address, and contact phone number.");
+    function closeMyOrdersModal() {
+      document.getElementById('myOrdersModal').style.display = 'none';
+    }
+
+    function openMyOrdersModal() {
+      document.getElementById('trackOrderIdInput').value = '';
+      document.getElementById('myOrdersList').innerHTML = '';
+      document.getElementById('myOrdersModal').style.display = 'flex';
+    }
+
+    // Looks up a single order by its Firestore document ID (shown to the
+    // customer on their order confirmation screen). We deliberately do NOT
+    // offer an open "list all my orders by email" query here — Firestore
+    // security rules should restrict listing/querying the orders collection
+    // to signed-in admins only, so guests can't browse each other's orders.
+    // A direct get-by-ID lookup is safe to leave open since the ID itself
+    // acts like an unguessable order/confirmation number.
+    async function lookupOrderById() {
+      const orderId = document.getElementById('trackOrderIdInput').value.trim();
+      const listEl = document.getElementById('myOrdersList');
+
+      if (!orderId) {
+        listEl.innerHTML = '<p style="font-size:13px;color:#c0392b;padding:10px 0;">Please enter your Order ID.</p>';
+        return;
+      }
+      if (!db) {
+        listEl.innerHTML = '<p style="font-size:13px;color:#c0392b;padding:10px 0;">Can\'t reach the database right now.</p>';
         return;
       }
 
-      let grandTotalStr = document.getElementById('summaryTotalPayable').innerText;
-      const orderId = "OSN-" + Math.floor(100000 + Math.random() * 900000);
-      showNotification("Order Placed!", `Order #${orderId} successfully placed via ${method}.`);
+      listEl.innerHTML = '<p style="font-size:13px;color:#777;padding:10px 0;">Looking up order...</p>';
 
-      document.getElementById('shippingFormView').style.display = 'none';
-      const successView = document.getElementById('checkoutSuccessView');
-      successView.style.display = 'block';
-      successView.innerHTML = `
-        <div style="text-align: center; padding: 25px 10px;">
-          <div style="font-size: 50px; color: #03a685;">✓</div>
-          <h2 style="color: #282c3f; margin: 10px 0;">Order Placed Successfully!</h2>
-          <p style="font-size: 14px; color: #535766;">Thank you for shopping on <strong>Osani.com</strong></p>
-          
-          <div style="background: #fcf8f7; border: 1px dashed #b76e79; padding: 14px; border-radius: 6px; margin: 20px 0; text-align: left; font-size: 13px;">
-            <p><strong>Order ID:</strong> ${orderId}</p>
-            <p><strong>Total Items:</strong> ${cartItems.reduce((sum, item) => sum + (item.qty || 1), 0)}</p>
-            <p><strong>Total Amount Paid:</strong> ${grandTotalStr}</p>
-            <p><strong>Payment Mode:</strong> ${method}</p>
-            <p><strong>Shipping To:</strong> ${name}, ${addr}</p>
-            <p><strong>Tracking update sent to:</strong> ${phone}</p>
+      try {
+        const doc = await db.collection("orders").doc(orderId).get();
+        if (!doc.exists) {
+          listEl.innerHTML = '<p style="font-size:13px;color:#c0392b;padding:10px 0;">No order found with that ID. Please double-check and try again.</p>';
+          return;
+        }
+
+        const o = doc.data();
+        const statusLabel = ORDER_STATUS_LABELS[o.status] || o.status;
+        const itemsSummary = (o.items || []).map(i => `${i.title || i.productId} x${i.quantity}`).join(', ');
+        listEl.innerHTML = `
+          <div style="padding:10px 0; border-bottom:1px solid #eee; font-size:13px;">
+            <div style="font-weight:bold; color:#3d282b;">Order #${doc.id}</div>
+            <div style="color:#535766; margin:3px 0;">${itemsSummary}</div>
+            <div>Status: <b>${statusLabel}</b></div>
+            ${o.trackingNumber ? `<div>Tracking: ${o.trackingNumber}${o.courierName ? ' (' + o.courierName + ')' : ''}</div>` : ''}
+            <div style="color:#777; font-size:11px; margin-top:2px;">₹${(o.retailPrice || 0).toLocaleString('en-IN')} • ${o.paymentMethod || ''}</div>
           </div>
+        `;
+      } catch (err) {
+        console.error("Failed to load order:", err);
+        listEl.innerHTML = '<p style="font-size:13px;color:#c0392b;padding:10px 0;">Could not look up that order right now. Please try again later.</p>';
+      }
+    }
 
-          <button class="place-order-btn" onclick="location.reload()" style="background: #3d282b;">Continue Shopping</button>
-        </div>
-      `;
+    function calculateCartTotal() {
+      return cartItems.reduce((sum, item) => {
+        const currPrice = parseFloat(String(item.price).replace(/,/g, '')) || 0;
+        return sum + currPrice * (item.qty || 1);
+      }, 0);
+    }
+
+    function showCheckoutFormError(message) {
+      const el = document.getElementById('checkoutFormError');
+      el.innerText = message;
+      el.style.display = 'block';
+    }
+
+    async function processPayment() {
+      const name = document.getElementById('custName').value.trim();
+      const email = document.getElementById('custEmail').value.trim();
+      const addr1 = document.getElementById('custAddr1').value.trim();
+      const addr2 = document.getElementById('custAddr2').value.trim();
+      const city = document.getElementById('custCity').value.trim();
+      const state = document.getElementById('custState').value.trim();
+      const pincode = document.getElementById('custPincode').value.trim();
+      const country = document.getElementById('custCountry').value;
+      const phoneRaw = document.getElementById('custPhone').value.trim();
+      const phone = phoneRaw.replace(/\D/g, '').slice(-10); // keep last 10 digits only
+      const method = document.querySelector('input[name="payMethod"]:checked').value;
+      document.getElementById('checkoutFormError').style.display = 'none';
+
+      if (!name || !addr1 || !addr2 || !pincode || !phone) {
+        showCheckoutFormError("Please fill in your name, both address lines, pincode, and a valid 10-digit phone number.");
+        return;
+      }
+      if (phone.length !== 10) {
+        showCheckoutFormError("Phone number must contain 10 digits.");
+        return;
+      }
+
+      // Every cart item needs a Printrove variant ID (set per-product in the
+      // admin panel's "Printrove Variant ID" field) — without it, Printrove
+      // has no way to know which physical product/size/color to print & ship.
+      const missingVariant = cartItems.find(item => !item.printroveVariantId);
+      if (missingVariant) {
+        showCheckoutFormError(`"${missingVariant.title}" isn't linked to a Printrove product yet. Please contact support — this item can't be fulfilled until an admin sets its Printrove Variant ID.`);
+        return;
+      }
+
+      if (!db) {
+        showCheckoutFormError("Can't reach the database right now. Please check your connection and try again.");
+        return;
+      }
+
+      const placeOrderBtn = document.querySelector('#shippingFormView .place-order-btn:last-child');
+      if (placeOrderBtn) { placeOrderBtn.disabled = true; placeOrderBtn.innerText = 'Placing order...'; }
+
+      const retailPrice = calculateCartTotal();
+
+      const orderDoc = {
+        status: "pending", // the Cloud Function flips this to sent_to_printrove / failed
+        printroveOrderId: null,
+        trackingNumber: null,
+        courierName: null,
+        retailPrice: retailPrice,
+        cod: method === "Cash On Delivery",
+        paymentMethod: method,
+        customer: {
+          name: name,
+          email: email || null,
+          phone: phone,
+          address1: addr1,
+          address2: addr2,
+          address3: null,
+          pincode: pincode,
+          state: state || null,
+          city: city || null,
+          country: country
+        },
+        items: cartItems.map(item => ({
+          variantId: item.printroveVariantId,
+          quantity: item.qty || 1,
+          isPlain: false,
+          // Kept for display in the admin Orders tab only — not sent to Printrove.
+          productId: item.id,
+          title: item.title,
+          unitPrice: parseFloat(String(item.price).replace(/,/g, '')) || 0
+        })),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      try {
+        const ref = await db.collection("orders").add(orderDoc);
+        const orderId = ref.id;
+
+        document.getElementById('shippingFormView').style.display = 'none';
+        const successView = document.getElementById('checkoutSuccessView');
+        successView.style.display = 'block';
+        successView.innerHTML = `
+          <div style="text-align: center; padding: 25px 10px;">
+            <div style="font-size: 50px; color: #03a685;">✓</div>
+            <h2 style="color: #282c3f; margin: 10px 0;">Order Placed Successfully!</h2>
+            <p style="font-size: 14px; color: #535766;">Thank you for shopping on <strong>Osani.com</strong></p>
+
+            <div style="background: #fcf8f7; border: 1px dashed #b76e79; padding: 14px; border-radius: 6px; margin: 20px 0; text-align: left; font-size: 13px;">
+              <p><strong>Order ID:</strong> ${orderId}</p>
+              <p><strong>Total Items:</strong> ${cartItems.reduce((sum, item) => sum + (item.qty || 1), 0)}</p>
+              <p><strong>Total Amount Paid:</strong> ₹${retailPrice.toLocaleString('en-IN')}</p>
+              <p><strong>Payment Mode:</strong> ${method}</p>
+              <p><strong>Shipping To:</strong> ${name}, ${addr1}, ${addr2}${city ? ', ' + city : ''}${pincode ? ' - ' + pincode : ''}</p>
+              <p><strong>Order updates sent to:</strong> ${phone}</p>
+            </div>
+
+            <button class="place-order-btn" onclick="location.reload()" style="background: #3d282b;">Continue Shopping</button>
+          </div>
+        `;
+        cartItems = [];
+      } catch (err) {
+        console.error("Failed to save order:", err);
+        showCheckoutFormError("Something went wrong placing your order. Please try again.");
+      } finally {
+        if (placeOrderBtn) { placeOrderBtn.disabled = false; placeOrderBtn.innerText = 'Place Order'; }
+      }
     }
 
     window.onload = function() {

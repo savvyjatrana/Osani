@@ -403,11 +403,56 @@
           <textarea id="newDesc" rows="3" placeholder="Enter detailed product description, material details, and specifications..."></textarea>
         </div>
 
+        <div class="form-group">
+          <label>Printrove Variant ID</label>
+          <input type="text" id="newPrintroveVariantId" placeholder="e.g. 460021">
+          <div style="font-size:11px;color:#777;margin-top:3px;">From Printrove's Product Library API. Required before this product can be ordered — checkout blocks items without one.</div>
+        </div>
+
       </div>
       <button class="admin-btn" id="submitProductBtn" onclick="addNewProduct()">Add Product to Inventory</button>
       <button class="cancel-edit-btn" id="cancelEditBtn" style="display:none;" onclick="cancelEdit()">Cancel Edit</button>
     </div>
 
+
+    <!-- Orders & Printrove Fulfillment Section -->
+    <div class="section-box">
+      <h3>
+        <span>Orders & Printrove Fulfillment</span>
+        <span id="ordersSyncStatusBadge" class="sync-status offline">● Connecting...</span>
+      </h3>
+      <div class="filter-bar">
+        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+          <label>Filter by Status:</label>
+          <select id="filterOrderStatus" onchange="renderOrdersTable()">
+            <option value="all">All Orders</option>
+            <option value="pending">Pending</option>
+            <option value="sent_to_printrove">Sent to Printrove</option>
+            <option value="in_production">In Production</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+            <option value="failed">Failed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Tracking</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="adminOrdersTableBody">
+          <tr><td colspan="7" style="text-align:center;color:#777;">Loading orders...</td></tr>
+        </tbody>
+      </table>
+    </div>
 
     <!-- Inventory Filter & List Section -->
     <div class="section-box">
@@ -456,6 +501,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
 
   <script>
     // =====================================================================
@@ -476,6 +522,7 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+    const cloudFunctions = firebase.functions();
 
     // ---------------------- ADMIN LOGIN (Firebase Auth) ----------------------
     // Create the admin's email/password once in:
@@ -502,6 +549,7 @@
         document.getElementById('adminLoginOverlay').style.display = 'none';
         document.getElementById('adminContent').style.display = 'block';
         initInventorySync();
+        initOrdersSync();
       } else {
         document.getElementById('adminLoginOverlay').style.display = 'flex';
         document.getElementById('adminContent').style.display = 'none';
@@ -731,6 +779,85 @@
       });
     }
 
+    // ---------------------- ORDERS & PRINTROVE SYNC ----------------------
+    let liveOrders = [];
+
+    const ORDER_STATUS_LABELS = {
+      pending: "Pending",
+      sent_to_printrove: "Sent to Printrove",
+      in_production: "In Production",
+      shipped: "Shipped",
+      delivered: "Delivered",
+      cancelled: "Cancelled",
+      failed: "Failed"
+    };
+
+    function initOrdersSync() {
+      db.collection("orders").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+        liveOrders = [];
+        snapshot.forEach(doc => liveOrders.push({ id: doc.id, ...doc.data() }));
+        document.getElementById('ordersSyncStatusBadge').innerText = '● Live — synced to cloud';
+        document.getElementById('ordersSyncStatusBadge').classList.remove('offline');
+        renderOrdersTable();
+      }, (error) => {
+        document.getElementById('ordersSyncStatusBadge').innerText = '● Offline / connection error';
+        document.getElementById('ordersSyncStatusBadge').classList.add('offline');
+        console.error("Orders sync failed:", error);
+      });
+    }
+
+    function renderOrdersTable() {
+      const filter = document.getElementById('filterOrderStatus').value;
+      const tbody = document.getElementById('adminOrdersTableBody');
+      const filtered = filter === 'all' ? liveOrders : liveOrders.filter(o => o.status === filter);
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#777;">No orders found.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(o => {
+        const itemsSummary = (o.items || []).map(i => `${i.title || i.productId} x${i.quantity}`).join('<br>');
+        const statusLabel = ORDER_STATUS_LABELS[o.status] || o.status || 'Unknown';
+        const statusColor = o.status === 'failed' ? '#c0392b' : (o.status === 'delivered' ? '#03a685' : '#3d282b');
+        const tracking = o.trackingNumber
+          ? `${o.trackingNumber}${o.courierName ? '<br><i>' + o.courierName + '</i>' : ''}`
+          : '—';
+        const retryBtn = (o.status === 'failed' || o.status === 'pending')
+          ? `<button class="edit-btn" onclick="retryOrderPush('${o.id}')">Push to Printrove</button>`
+          : '';
+        const errorNote = o.printroveError
+          ? `<div style="color:#c0392b; font-size:11px; margin-top:4px;" title="${(o.printroveError + '').replace(/"/g, '&quot;')}">⚠ ${(o.printroveError + '').slice(0, 60)}${(o.printroveError + '').length > 60 ? '...' : ''}</div>`
+          : '';
+
+        return `
+          <tr>
+            <td><b>${o.id}</b></td>
+            <td>${(o.customer && o.customer.name) || '—'}<br><span style="font-size:11px;color:#777;">${(o.customer && o.customer.phone) || ''}</span></td>
+            <td style="font-size:12px;">${itemsSummary}</td>
+            <td>₹${(o.retailPrice || 0).toLocaleString('en-IN')}${o.cod ? '<br><span style="font-size:11px;color:#777;">COD</span>' : ''}</td>
+            <td style="color:${statusColor};font-weight:bold;">${statusLabel}${errorNote}</td>
+            <td style="font-size:12px;">${tracking}</td>
+            <td>${retryBtn}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Calls the retryPushOrder Cloud Function (functions/index.js) which
+    // re-attempts sending this order to Printrove using the current data.
+    function retryOrderPush(orderId) {
+      if (!confirm(`Push order ${orderId} to Printrove now?`)) return;
+      const retryCall = cloudFunctions.httpsCallable('retryPushOrder');
+      retryCall({ orderId })
+        .then((result) => {
+          alert(`✅ Order pushed to Printrove successfully! Printrove Order ID: ${result.data.printroveOrderId}`);
+        })
+        .catch((err) => {
+          alert(`❌ Failed to push order: ${err.message}\n\nMake sure the retryPushOrder Cloud Function is deployed.`);
+        });
+    }
+
     function updateAdminSubOptions() {
       const catSelect = document.getElementById('newCategory').value;
       const subSelect = document.getElementById('newSubCategory');
@@ -821,11 +948,14 @@
 
       items.forEach((item) => {
         const tr = document.createElement('tr');
+        const variantWarning = item.printroveVariantId
+          ? ''
+          : ' <span title="No Printrove Variant ID set — this product cannot be ordered yet" style="color:#c0392b; font-size:11px;">⚠ not linked</span>';
         tr.innerHTML = `
           <td><img src="${item.img}" alt="Img" onerror="this.src='https://via.placeholder.com/45'"></td>
           <td><b>${item.id}</b></td>
           <td>${item.category.toUpperCase()} / <i>${item.sub}</i></td>
-          <td>${item.title}</td>
+          <td>${item.title}${variantWarning}</td>
           <td>₹${item.price}</td>
           <td>
             <button class="edit-btn" onclick="editProduct('${item.id}')">Edit</button>
@@ -859,6 +989,7 @@
       document.getElementById('newOrig').value = '';
       document.getElementById('newDisc').value = '';
       document.getElementById('newDesc').value = '';
+      document.getElementById('newPrintroveVariantId').value = '';
       document.getElementById('imageFileLoader').value = '';
       document.getElementById('currentImgPreview').style.display = 'none';
       document.getElementById('currentImgPreview').src = '';
@@ -878,6 +1009,7 @@
       const orig = document.getElementById('newOrig').value.trim();
       const disc = document.getElementById('newDisc').value.trim();
       const description = document.getElementById('newDesc').value.trim();
+      const printroveVariantId = document.getElementById('newPrintroveVariantId').value.trim();
 
       if (!id || !title || !img || !price || !orig || !description) {
         alert("Please fill in all required fields, upload an image, and add a description!");
@@ -897,7 +1029,8 @@
         const updatedProduct = {
           ...existing,
           category, sub, title, img, description, extraImages, videoUrl,
-          price, orig, disc: disc || "50% off"
+          price, orig, disc: disc || "50% off",
+          printroveVariantId: printroveVariantId || null
         };
         saveProductToCloud(updatedProduct)
           .then(() => {
@@ -913,7 +1046,8 @@
         const newProd = {
           id, category, sub, title, img, description, extraImages, videoUrl,
           price, orig, disc: disc || "50% off",
-          rating: "⭐⭐⭐⭐⭐ (100)"
+          rating: "⭐⭐⭐⭐⭐ (100)",
+          printroveVariantId: printroveVariantId || null
         };
         saveProductToCloud(newProd)
           .then(() => {
@@ -949,6 +1083,7 @@
       document.getElementById('newOrig').value = prod.orig;
       document.getElementById('newDisc').value = prod.disc;
       document.getElementById('newDesc').value = prod.description || '';
+      document.getElementById('newPrintroveVariantId').value = prod.printroveVariantId || '';
 
       document.getElementById('formSectionTitle').innerText = 'Edit Product';
       document.getElementById('editingBanner').style.display = 'block';

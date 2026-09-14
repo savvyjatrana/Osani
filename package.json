@@ -1,0 +1,12 @@
+{
+  "name": "printrove-integration",
+  "description": "Firebase Cloud Functions that push orders to Printrove and sync tracking back",
+  "engines": { "node": "20" },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^12.1.0",
+    "firebase-functions": "^5.0.0",
+    "axios": "^1.7.2"
+  },
+  "private": true
+}
