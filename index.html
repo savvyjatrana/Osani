@@ -827,10 +827,15 @@
       overflow: hidden;
     }
 
+    /* FIX: video / uploaded-photo are pinned absolutely so they always fill
+       the viewport and stack correctly, regardless of flex layout quirks. */
     .tryon-viewport video, .tryon-viewport img.user-preview {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
+      z-index: 1;
     }
 
     .tryon-overlay-item {
@@ -841,6 +846,12 @@
       pointer-events: none;
       filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
       transition: all 0.1s ease;
+      z-index: 2; /* FIX: always render above the video/photo layer */
+    }
+
+    #tryOnPlaceholder {
+      position: relative;
+      z-index: 0;
     }
 
     .tryon-controls {
@@ -2177,6 +2188,11 @@
       const prod = productsDB.find(p => p.id === productId) || activeDetailProduct;
       if (!prod) return;
 
+      // FIX: reset any leftover photo/video state from a previous try-on session
+      // before showing a new product, so switching products doesn't leave a
+      // stale image or a stray camera stream running.
+      resetTryOnViewport();
+
       document.getElementById('tryOnProductLabel').innerText = `Trying on: ${prod.title}`;
       const overlayImg = document.getElementById('tryOnOverlayProduct');
       overlayImg.src = prod.img;
@@ -2204,15 +2220,33 @@
       if (activeDetailProduct) openTryOnModal(activeDetailProduct.id);
     }
 
-    function closeTryOnModal() {
-      document.getElementById('tryOnModal').style.display = 'none';
+    // FIX: shared reset helper so both closeTryOnModal() and re-opening for a
+    // new product start from a clean state (stops camera, clears photo,
+    // clears the file input so the same photo can be re-selected).
+    function resetTryOnViewport() {
       if (mediaStream) {
         mediaStream.getTracks().forEach(track => track.stop());
         mediaStream = null;
       }
-      document.getElementById('tryOnVideo').style.display = 'none';
-      document.getElementById('tryOnUserPhoto').style.display = 'none';
-      document.getElementById('tryOnPlaceholder').style.display = 'block';
+      const video = document.getElementById('tryOnVideo');
+      const userPhoto = document.getElementById('tryOnUserPhoto');
+      const placeholder = document.getElementById('tryOnPlaceholder');
+      const uploadInput = document.getElementById('tryOnPhotoUpload');
+
+      video.style.display = 'none';
+      video.srcObject = null;
+      userPhoto.style.display = 'none';
+      userPhoto.src = '';
+      placeholder.style.display = 'block';
+      placeholder.innerHTML = `
+        <p style="font-size:36px; margin-bottom:8px;">📷</p>
+        <p style="font-size:14px; font-weight:bold; color:#f3e6e8;">Start Camera or Upload Your Photo to Try On</p>`;
+      if (uploadInput) uploadInput.value = '';
+    }
+
+    function closeTryOnModal() {
+      document.getElementById('tryOnModal').style.display = 'none';
+      resetTryOnViewport();
     }
 
     async function startWebcam() {
@@ -2224,27 +2258,44 @@
         document.getElementById('tryOnUserPhoto').style.display = 'none';
         document.getElementById('tryOnPlaceholder').style.display = 'none';
       } catch (err) {
-        alert("Camera access denied or unavailable. Please upload a photo instead.");
+        // FIX: log the real error and show an in-page message instead of a
+        // blocking alert(); getUserMedia needs a secure context (https or
+        // localhost) plus explicit camera permission, so most failures here
+        // are environment/permission issues rather than app bugs.
+        console.error('Camera error:', err && err.name, err && err.message);
+        const placeholder = document.getElementById('tryOnPlaceholder');
+        placeholder.style.display = 'block';
+        placeholder.innerHTML = `
+          <p style="font-size:36px; margin-bottom:8px;">🚫</p>
+          <p style="font-size:13px; font-weight:bold; color:#f3e6e8;">Camera unavailable. Make sure this page is loaded over HTTPS and camera access is allowed, or use "Upload Photo" instead.</p>`;
       }
     }
 
     function handleUserPhotoUpload(event) {
       const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const userPhoto = document.getElementById('tryOnUserPhoto');
-          userPhoto.src = e.target.result;
-          userPhoto.style.display = 'block';
-          document.getElementById('tryOnVideo').style.display = 'none';
-          document.getElementById('tryOnPlaceholder').style.display = 'none';
-          if (mediaStream) {
-            mediaStream.getTracks().forEach(track => track.stop());
-            mediaStream = null;
-          }
-        };
-        reader.readAsDataURL(file);
-      }
+      // FIX: clear the input value immediately so selecting the exact same
+      // file again still fires the change event next time.
+      event.target.value = '';
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onerror = function() {
+        // FIX: surface read failures instead of failing silently.
+        console.error('FileReader error while reading uploaded photo.');
+        showNotification('Upload Failed', 'Could not read that image. Please try a different photo.');
+      };
+      reader.onload = function(e) {
+        const userPhoto = document.getElementById('tryOnUserPhoto');
+        userPhoto.src = e.target.result;
+        userPhoto.style.display = 'block';
+        document.getElementById('tryOnVideo').style.display = 'none';
+        document.getElementById('tryOnPlaceholder').style.display = 'none';
+        if (mediaStream) {
+          mediaStream.getTracks().forEach(track => track.stop());
+          mediaStream = null;
+        }
+      };
+      reader.readAsDataURL(file);
     }
 
     /* Profile & Auth */
