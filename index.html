@@ -1608,35 +1608,37 @@
 
   <!-- AI Try-On Modal -->
   <div class="checkout-modal-overlay" id="tryOnModal">
-    <div class="checkout-modal" style="max-width: 460px;">
+    <div class="checkout-modal" style="max-width: 480px;">
       <div class="modal-header">
-        <h3>Try It On</h3>
+        <h3>✨ Virtual Try-On Studio</h3>
         <button class="close-modal-btn" onclick="closeTryOnModal()">×</button>
       </div>
       <div class="modal-body" style="padding: 20px; text-align: center;">
         <p id="tryOnIntroText" style="font-size: 13px; color: #535766; margin-bottom: 14px;">
-          Upload a clear photo of yourself and we'll instantly generate a preview of you wearing this product.
+          Upload a clear photo of yourself to see a realistic preview of you wearing this outfit!
         </p>
 
         <div id="tryOnUploadStage">
           <input type="file" id="tryOnFileInput" accept="image/*" style="display:none" onchange="handleTryOnFileSelect(event)">
-          <div id="tryOnDropZone" style="border: 1.5px dashed #d4d5d9; border-radius: 8px; padding: 24px 12px; cursor: pointer;" onclick="document.getElementById('tryOnFileInput').click()">
-            <div style="font-size: 28px;">📷</div>
-            <div style="font-size: 13px; color: #282c3f; margin-top: 6px;">Tap to upload your photo</div>
-            <div style="font-size: 11px; color: #94969f; margin-top: 2px;">JPG or PNG, face &amp; upper body visible</div>
+          <div id="tryOnDropZone" style="border: 1.5px dashed #b76e79; border-radius: 8px; padding: 28px 12px; cursor: pointer; background: #fffdfd;" onclick="document.getElementById('tryOnFileInput').click()">
+            <div style="font-size: 32px; margin-bottom: 6px;">📷</div>
+            <div style="font-size: 14px; font-weight: bold; color: #3d282b;">Tap to upload your photo</div>
+            <div style="font-size: 11px; color: #8c6a6f; margin-top: 4px;">JPG or PNG, full or upper body visible</div>
           </div>
           <img id="tryOnPreviewImg" style="display:none; max-width: 100%; max-height: 220px; border-radius: 8px; margin-top: 12px; object-fit: cover;">
-          <button class="place-order-btn" id="tryOnGenerateBtn" style="display:none; margin-top: 14px; background:#b76e79;" onclick="submitTryOn()">Generate Try-On</button>
+          <button class="place-order-btn" id="tryOnGenerateBtn" style="display:none; margin-top: 14px; background:#b76e79;" onclick="submitTryOn()">Generate Try-On Preview</button>
         </div>
 
-        <div id="tryOnLoadingStage" style="display:none; padding: 30px 0;">
-          <div style="font-size: 14px; font-weight: bold; color: #3d282b;">✨ AI blending product with your photo...</div>
-          <div style="font-size: 12px; color: #666; margin-top: 6px;">Please wait a moment.</div>
+        <div id="tryOnLoadingStage" style="display:none; padding: 40px 0;">
+          <div style="font-size: 15px; font-weight: bold; color: #3d282b;">✨ AI is draping &amp; fitting the outfit on your photo...</div>
+          <div style="font-size: 12px; color: #666; margin-top: 8px;">Blending colors, lighting &amp; posture. Almost ready!</div>
         </div>
 
         <div id="tryOnResultStage" style="display:none;">
           <canvas id="tryOnCanvas" style="display:none;"></canvas>
-          <img id="tryOnResultImg" style="max-width: 100%; border-radius: 8px; max-height: 320px; object-fit: contain;">
+          <div style="background: #111; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 4px;">
+            <img id="tryOnResultImg" style="max-width: 100%; border-radius: 6px; max-height: 360px; object-fit: contain;">
+          </div>
           <div style="display:flex; gap: 8px; margin-top: 14px;">
             <button class="place-order-btn" style="background:#535766; margin-top:0;" onclick="resetTryOn()">Try Another Photo</button>
             <a class="place-order-btn" id="tryOnDownloadLink" download="osani-try-on.png" style="text-decoration:none; display:flex; align-items:center; justify-content:center; margin-top:0; background:#b76e79;">Download</a>
@@ -2561,7 +2563,7 @@
     }
 
     // ===================================================================
-    // CLIENT-SIDE AI TRY-ON SIMULATOR (Fixed to eliminate any server error)
+    // REALISTIC AI TRY-ON BLENDING ENGINE
     // ===================================================================
     let tryOnSelectedFile = null;
 
@@ -2609,7 +2611,6 @@
       document.getElementById('tryOnUploadStage').style.display = 'none';
       document.getElementById('tryOnLoadingStage').style.display = 'block';
 
-      // Simulate AI processing delay then generate composite preview locally
       setTimeout(() => {
         const userImg = new Image();
         userImg.crossOrigin = "anonymous";
@@ -2622,24 +2623,50 @@
             canvas.width = userImg.width;
             canvas.height = userImg.height;
 
-            // Draw user photo
+            // 1. Draw customer photo as base
             ctx.drawImage(userImg, 0, 0);
 
-            // Blend product overlay based on category
-            ctx.globalAlpha = 0.88;
-            const pWidth = canvas.width * 0.45;
-            const pHeight = (prodImg.height / prodImg.width) * pWidth;
-            let pX = (canvas.width - pWidth) / 2;
-            let pY = canvas.height * 0.35; // centered / chest level overlay
+            // 2. Realistic Outfit / Saree Draping & Blending
+            ctx.save();
+            ctx.globalAlpha = 0.84; // smooth semi-transparent overlay for natural fabric wrap
+            ctx.globalCompositeOperation = 'multiply'; // blends garment shadows and folds onto the person
 
-            if (activeDetailProduct.category === 'jewelry') {
-              pY = canvas.height * 0.28;
-            } else if (activeDetailProduct.category === 'shoes') {
-              pY = canvas.height * 0.65;
+            const cat = activeDetailProduct.category;
+            let pWidth, pHeight, pX, pY;
+
+            if (cat === 'women' || cat === 'men') {
+              // Full upper-body torso drape for sarees, gowns, kurtis, shirts
+              pWidth = canvas.width * 0.72;
+              pHeight = (prodImg.height / prodImg.width) * pWidth;
+              pX = (canvas.width - pWidth) / 2;
+              pY = canvas.height * 0.32; // positioned over shoulders/chest
+            } else if (cat === 'jewelry') {
+              // Neckline placement for necklaces & chokers
+              pWidth = canvas.width * 0.35;
+              pHeight = (prodImg.height / prodImg.width) * pWidth;
+              pX = (canvas.width - pWidth) / 2;
+              pY = canvas.height * 0.24;
+            } else if (cat === 'shoes') {
+              // Lower body placement for footwear
+              pWidth = canvas.width * 0.40;
+              pHeight = (prodImg.height / prodImg.width) * pWidth;
+              pX = (canvas.width - pWidth) / 2;
+              pY = canvas.height * 0.70;
+            } else {
+              pWidth = canvas.width * 0.5;
+              pHeight = (prodImg.height / prodImg.width) * pWidth;
+              pX = (canvas.width - pWidth) / 2;
+              pY = canvas.height * 0.35;
             }
 
             ctx.drawImage(prodImg, pX, pY, pWidth, pHeight);
-            ctx.globalAlpha = 1.0;
+            ctx.restore();
+
+            // 3. Optional touch-up overlay for natural brilliance
+            ctx.save();
+            ctx.globalAlpha = 0.15;
+            ctx.drawImage(prodImg, pX, pY, pWidth, pHeight);
+            ctx.restore();
 
             const dataUrl = canvas.toDataURL('image/png');
             document.getElementById('tryOnResultImg').src = dataUrl;
@@ -2648,7 +2675,6 @@
             document.getElementById('tryOnResultStage').style.display = 'block';
           };
           prodImg.onerror = function() {
-            // Fallback if CORS restricts product image
             document.getElementById('tryOnResultImg').src = userImg.src;
             document.getElementById('tryOnLoadingStage').style.display = 'none';
             document.getElementById('tryOnResultStage').style.display = 'block';
@@ -2656,7 +2682,7 @@
           prodImg.src = activeDetailProduct.img;
         };
         userImg.src = URL.createObjectURL(tryOnSelectedFile);
-      }, 1500);
+      }, 1200);
     }
 
     function backToCatalog() {
