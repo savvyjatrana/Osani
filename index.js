@@ -25,6 +25,7 @@
  *   firebase functions:secrets:set PRINTROVE_EMAIL
  *   firebase functions:secrets:set PRINTROVE_PASSWORD
  *   firebase functions:secrets:set MSG91_AUTHKEY
+ *   firebase functions:secrets:set GEMINI_API_KEY   (AI try-on — see tryonClient.js)
  * Optional (order notifications — see notifyClient.js for what each does),
  * set as env vars however you manage functions/ config (e.g. a .env file):
  *   MSG91_SMS_FLOW_ID, MSG91_SMS_SENDER_ID,
@@ -36,14 +37,17 @@ const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
+const axios = require("axios");
 const printrove = require("./printroveClient");
 const notify = require("./notifyClient");
+const tryon = require("./tryonClient");
 
 admin.initializeApp();
 
 const PRINTROVE_EMAIL = defineSecret("PRINTROVE_EMAIL");
 const PRINTROVE_PASSWORD = defineSecret("PRINTROVE_PASSWORD");
 const MSG91_AUTHKEY = defineSecret("MSG91_AUTHKEY");
+const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 
 // Fill these in (env vars, or a functions/.env file) once you've set up
 // your MSG91 SMS flow and/or WhatsApp template. Leaving a field blank just
@@ -208,6 +212,58 @@ exports.retryPushOrder = onCall(
       throw new HttpsError("internal", update.printroveError || "Push to Printrove failed");
     }
     return { success: true, printroveOrderId: update.printroveOrderId };
+  }
+);
+
+/**
+ * Callable function: powers the "Try It On With AI" button on the product
+ * detail page. Takes a productId + a customer-uploaded photo, fetches that
+ * product's image, and asks Gemini (tryonClient.js) to generate a preview
+ * of the customer wearing/using it.
+ *
+ * Request:  { productId: string, userPhotoBase64: string, userPhotoMimeType?: string }
+ * Response: { imageBase64: string, mimeType: string }
+ */
+exports.generateTryOnImage = onCall(
+  { secrets: [GEMINI_API_KEY], timeoutSeconds: 60, memory: "512MiB" },
+  async (request) => {
+    const { productId, userPhotoBase64, userPhotoMimeType } = request.data || {};
+    if (!productId || !userPhotoBase64) {
+      throw new HttpsError("invalid-argument", "productId and userPhotoBase64 are required");
+    }
+
+    const productSnap = await admin.firestore().collection("products").doc(productId).get();
+    if (!productSnap.exists) throw new HttpsError("not-found", "Product not found");
+
+    const product = productSnap.data();
+    if (!product.img) {
+      throw new HttpsError("failed-precondition", "This product has no image to try on.");
+    }
+
+    // product.img is a URL (Storage or external) — fetch and base64-encode
+    // it so it can go in the same request as the customer's photo.
+    let productImageBase64, productImageMimeType;
+    try {
+      const imgRes = await axios.get(product.img, { responseType: "arraybuffer", timeout: 15000 });
+      productImageBase64 = Buffer.from(imgRes.data).toString("base64");
+      productImageMimeType = imgRes.headers["content-type"] || "image/jpeg";
+    } catch (err) {
+      console.error(`Try-on: failed to fetch product image for ${productId}:`, err.message);
+      throw new HttpsError("internal", "Could not load the product image.");
+    }
+
+    try {
+      return await tryon.generateTryOn(GEMINI_API_KEY.value(), {
+        userPhotoBase64,
+        userPhotoMimeType: userPhotoMimeType || "image/jpeg",
+        productImageBase64,
+        productImageMimeType,
+        productTitle: product.title,
+      });
+    } catch (err) {
+      console.error(`Try-on generation failed for product ${productId}:`, err.message);
+      throw new HttpsError("internal", err.message || "Try-on generation failed.");
+    }
   }
 );
 
