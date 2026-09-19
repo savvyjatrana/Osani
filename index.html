@@ -157,6 +157,44 @@
       font-size: 15px;
       outline: none;
       background: #fff;
+      min-width: 0;
+    }
+
+    .search-lang-select {
+      border: none;
+      border-left: 1px solid #eee;
+      background: #fff;
+      font-size: 11px;
+      color: #6b6f76;
+      padding: 0 2px;
+      outline: none;
+      max-width: 54px;
+    }
+
+    .voice-search-btn {
+      background: #fff;
+      border: none;
+      border-left: 1px solid #eee;
+      width: 40px;
+      cursor: pointer;
+      font-size: 16px;
+      color: #b76e79;
+      transition: color .15s, background-color .15s;
+      flex-shrink: 0;
+    }
+
+    .voice-search-btn:hover {
+      background: #fbeef0;
+    }
+
+    .voice-search-btn.listening {
+      color: #ff3e6c;
+      animation: voiceSearchPulse 1s infinite;
+    }
+
+    @keyframes voiceSearchPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .35; }
     }
 
     .search-box button {
@@ -166,10 +204,24 @@
       cursor: pointer;
       font-size: 18px;
       color: white;
+      flex-shrink: 0;
     }
 
     .search-box button:hover {
       background-color: #a35a64;
+    }
+
+    .search-box .voice-search-btn {
+      background-color: #fff;
+      color: #b76e79;
+    }
+
+    .search-box .voice-search-btn:hover {
+      background-color: #fbeef0;
+    }
+
+    .search-box .voice-search-btn.listening {
+      color: #ff3e6c;
     }
 
     .header-actions {
@@ -1382,6 +1434,23 @@
 
     <div class="search-box">
       <input type="text" id="searchInput" placeholder="Search across all departments..." onkeyup="if(event.key==='Enter') doSearch()">
+      <select id="voiceSearchLang" class="search-lang-select" title="Voice search language">
+        <option value="en-US">EN</option>
+        <option value="hi-IN">HI</option>
+        <option value="ar-SA">AR</option>
+        <option value="fr-FR">FR</option>
+        <option value="es-ES">ES</option>
+        <option value="de-DE">DE</option>
+        <option value="pt-BR">PT</option>
+        <option value="bn-IN">BN</option>
+        <option value="ta-IN">TA</option>
+        <option value="te-IN">TE</option>
+        <option value="ur-IN">UR</option>
+        <option value="zh-CN">ZH</option>
+        <option value="ja-JP">JA</option>
+        <option value="ru-RU">RU</option>
+      </select>
+      <button type="button" id="voiceSearchBtn" class="voice-search-btn" onclick="toggleVoiceSearch()" title="Search by voice">🎙️</button>
       <button type="button" onclick="doSearch()">🔍</button>
     </div>
 
@@ -1599,52 +1668,46 @@
           <button class="btn btn-add-cart" id="detailAddCartBtn">Add to Bag</button>
           <button class="btn btn-buy-osani" id="detailBuyNowBtn">Buy Now</button>
         </div>
-        <button class="wishlist-btn" id="detailTryOnBtn" style="margin-top: 10px; padding: 10px 0; font-size: 13px; max-width: 320px; background:#b76e79; color:#fff; border-color:#a35a64;" onclick="openTryOnModal()">
+        <button class="wishlist-btn" id="detailTryOnBtn" style="margin-top: 10px; padding: 10px 0; font-size: 13px; max-width: 320px;" onclick="openTryOnModal()">
           ✨ TRY IT ON WITH AI
         </button>
       </div>
     </div>
   </main>
 
-  <!-- Genlook Style AI Virtual Try-On Modal -->
+  <!-- AI Try-On Modal -->
   <div class="checkout-modal-overlay" id="tryOnModal">
-    <div class="checkout-modal" style="max-width: 480px;">
+    <div class="checkout-modal" style="max-width: 460px;">
       <div class="modal-header">
-        <h3 style="display:flex; align-items:center; gap:6px;">
-          <span>Genlook</span> <span style="font-size:11px; background:#b76e79; padding:2px 6px; border-radius:10px;">AI Try-On</span>
-        </h3>
+        <h3>Try It On</h3>
         <button class="close-modal-btn" onclick="closeTryOnModal()">×</button>
       </div>
       <div class="modal-body" style="padding: 20px; text-align: center;">
         <p id="tryOnIntroText" style="font-size: 13px; color: #535766; margin-bottom: 14px;">
-          Upload your photo to instantly preview how this outfit fits and drapes on you!
+          Upload a clear photo of yourself and we'll generate a preview of you wearing this product. This is an AI-generated image for guidance only — actual fit and appearance may vary.
         </p>
 
         <div id="tryOnUploadStage">
           <input type="file" id="tryOnFileInput" accept="image/*" style="display:none" onchange="handleTryOnFileSelect(event)">
-          <div id="tryOnDropZone" style="border: 1.5px dashed #b76e79; border-radius: 8px; padding: 28px 12px; cursor: pointer; background: #fffdfd;" onclick="document.getElementById('tryOnFileInput').click()">
-            <div style="font-size: 32px; margin-bottom: 6px;">📸</div>
-            <div style="font-size: 14px; font-weight: bold; color: #3d282b;">Upload Your Photo</div>
-            <div style="font-size: 11px; color: #8c6a6f; margin-top: 4px;">JPG or PNG, full body or portrait</div>
+          <div id="tryOnDropZone" style="border: 1.5px dashed #d4d5d9; border-radius: 8px; padding: 24px 12px; cursor: pointer;" onclick="document.getElementById('tryOnFileInput').click()">
+            <div style="font-size: 28px;">📷</div>
+            <div style="font-size: 13px; color: #282c3f; margin-top: 6px;">Tap to upload your photo</div>
+            <div style="font-size: 11px; color: #94969f; margin-top: 2px;">JPG or PNG, face &amp; upper body visible</div>
           </div>
-          <img id="tryOnPreviewImg" style="display:none; max-width: 100%; max-height: 220px; border-radius: 8px; margin-top: 12px; object-fit: cover;">
-          <button class="place-order-btn" id="tryOnGenerateBtn" style="display:none; margin-top: 14px; background:#b76e79;" onclick="submitTryOn()">Generate Try-On</button>
+          <img id="tryOnPreviewImg" style="display:none; max-width: 100%; max-height: 220px; border-radius: 8px; margin-top: 12px;">
+          <button class="place-order-btn" id="tryOnGenerateBtn" style="display:none; margin-top: 14px;" onclick="submitTryOn()">Generate Try-On</button>
         </div>
 
-        <div id="tryOnLoadingStage" style="display:none; padding: 40px 0;">
-          <div style="font-size: 15px; font-weight: bold; color: #3d282b;">✨ Genlook AI is fitting the outfit...</div>
-          <div style="font-size: 12px; color: #666; margin-top: 8px;">Draping fabric &amp; adjusting proportions. Almost ready!</div>
+        <div id="tryOnLoadingStage" style="display:none; padding: 30px 0;">
+          <div style="font-size: 13px; color: #535766;">Generating your try-on image…</div>
+          <div style="font-size: 11px; color: #94969f; margin-top: 6px;">This can take up to 30 seconds.</div>
         </div>
 
         <div id="tryOnResultStage" style="display:none;">
-          <canvas id="tryOnCanvas" style="display:none;"></canvas>
-          <div style="background: #111; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 4px; position: relative;">
-            <img id="tryOnResultImg" style="max-width: 100%; border-radius: 6px; max-height: 380px; object-fit: contain;">
-            <span style="position: absolute; bottom: 8px; right: 10px; background: rgba(0,0,0,0.6); color: #fff; font-size: 10px; padding: 3px 6px; border-radius: 4px;">AI MODIFIED ✨</span>
-          </div>
+          <img id="tryOnResultImg" style="max-width: 100%; border-radius: 8px;">
           <div style="display:flex; gap: 8px; margin-top: 14px;">
-            <button class="place-order-btn" style="background:#535766; margin-top:0;" onclick="resetTryOn()">Try Another Photo</button>
-            <a class="place-order-btn" id="tryOnDownloadLink" download="genlook-try-on.png" style="text-decoration:none; display:flex; align-items:center; justify-content:center; margin-top:0; background:#b76e79;">Download</a>
+            <button class="place-order-btn" style="background:#535766;" onclick="resetTryOn()">Try Another Photo</button>
+            <a class="place-order-btn" id="tryOnDownloadLink" download="try-on.png" style="text-decoration:none; display:flex; align-items:center; justify-content:center;">Download</a>
           </div>
         </div>
 
@@ -1914,7 +1977,7 @@
     </div>
   </div>
 
-  <!-- Policies Modal -->
+  <!-- Policies Modal: Terms & Conditions / Return & Refund / Privacy / Shipping -->
   <div class="checkout-modal-overlay" id="policyModal">
     <div class="checkout-modal" style="max-width: 600px;">
       <div class="modal-header">
@@ -1932,18 +1995,56 @@
         <div class="policy-content" id="content-terms">
           <h4>Terms &amp; Conditions</h4>
           <p>By accessing and using Osani.com, you agree to be bound by the following terms and conditions. Please read them carefully before placing an order.</p>
+          <h4>Use of the Website</h4>
+          <ul>
+            <li>You must be at least 18 years old, or have parental/guardian consent, to place an order.</li>
+            <li>All product images are for illustration; slight variations in color or design may occur.</li>
+            <li>Prices, offers and discounts are subject to change without prior notice.</li>
+          </ul>
+          <h4>Orders &amp; Payments</h4>
+          <ul>
+            <li>An order is confirmed only after successful payment or COD confirmation.</li>
+            <li>Osani.com reserves the right to cancel any order due to stock unavailability, pricing errors, or suspected fraud.</li>
+          </ul>
+          <h4>Intellectual Property</h4>
+          <p>All content on this website, including logos, text and images, is the property of Osani.com and may not be reproduced without written permission.</p>
         </div>
+
         <div class="policy-content" id="content-return" style="display: none;">
           <h4>Return, Exchange &amp; Refund Policy</h4>
-          <p>Eligible for return or exchange within <strong>7 days of delivery</strong>.</p>
+          <p>We want you to love what you order. If you're not fully satisfied, most items are eligible for return or exchange within <strong>7 days of delivery</strong>.</p>
+          <h4>Eligibility for Return</h4>
+          <ul>
+            <li>Item must be unused, unwashed, and in its original packaging with all tags intact.</li>
+            <li>Certain categories (innerwear, jewelry sets that are opened, and customized items) are non-returnable for hygiene and safety reasons.</li>
+            <li>Damaged, defective, or wrong items are eligible for free replacement or full refund.</li>
+          </ul>
+          <h4>Refund Timeline</h4>
+          <ul>
+            <li>Refunds to original payment method: 5–7 business days after pickup/quality check.</li>
+            <li>Cash on Delivery refunds are processed via bank transfer or store credit.</li>
+          </ul>
+          <p>To start a return, go to <strong>Profile → Orders</strong> and select "Return / Exchange", or contact support@osani.com with your order ID.</p>
         </div>
+
         <div class="policy-content" id="content-shipping" style="display: none;">
           <h4>Shipping &amp; Delivery Policy</h4>
-          <p>Free shipping worldwide on orders above $50 / ₹3,999.</p>
+          <ul>
+            <li>Free shipping worldwide on orders above $50 / ₹3,999; a nominal fee applies below that.</li>
+            <li>Standard delivery: 3–7 business days within India, 7–14 business days for international orders.</li>
+            <li>You will receive tracking updates via SMS/WhatsApp and email once your order is dispatched.</li>
+            <li>Customs duties, if applicable on international orders, are the responsibility of the customer.</li>
+          </ul>
         </div>
+
         <div class="policy-content" id="content-privacy" style="display: none;">
           <h4>Privacy Policy</h4>
-          <p>We value your privacy. Any personal information you share with us is used solely to process your orders.</p>
+          <p>We value your privacy. Any personal information you share with us (name, address, phone, payment details) is used solely to process your orders and improve your shopping experience.</p>
+          <ul>
+            <li>We do not sell or rent your personal data to third parties.</li>
+            <li>Payment information is processed through secure, encrypted payment gateways.</li>
+            <li>You may request access to, correction of, or deletion of your personal data by emailing support@osani.com.</li>
+          </ul>
         </div>
 
         <button class="place-order-btn" onclick="closePolicyModal()" style="margin-top: 16px;">Close</button>
@@ -1959,13 +2060,16 @@
         <span class="footer-link" onclick="openAboutModal()">About Us</span>
         <span class="footer-link" onclick="showNotification('Careers', 'We are not hiring right now, but check back soon!')">Careers</span>
         <span class="footer-link" onclick="loadCollection('all', 'All Departments & Collections')">Shop All Collections</span>
+        <span class="footer-link" onclick="showNotification('Osani Stories', 'Read about our artisans and sourcing partners soon.')">Osani Stories</span>
       </div>
 
       <div class="footer-col">
         <h4>Customer Policies</h4>
         <span class="footer-link" onclick="openPolicyModal('terms')">Terms &amp; Conditions</span>
-        <span class="footer-link" onclick="openPolicyModal('return')">Return Policy</span>
+        <span class="footer-link" onclick="openPolicyModal('return')">Return, Exchange &amp; Refund Policy</span>
         <span class="footer-link" onclick="openPolicyModal('shipping')">Shipping Policy</span>
+        <span class="footer-link" onclick="openPolicyModal('privacy')">Privacy Policy</span>
+        <span class="footer-link" onclick="showNotification('Need Help?', 'Reach us anytime at support@osani.com')">FAQs / Help Center</span>
       </div>
 
       <div class="footer-col">
@@ -1977,10 +2081,13 @@
 
       <div class="footer-col">
         <h4>Connect With Us</h4>
+        <p class="footer-text">Follow us for new arrivals, offers &amp; behind-the-scenes.</p>
         <div class="footer-social-icons">
           <a href="https://facebook.com/osani.com" target="_blank" rel="noopener noreferrer" title="Facebook">📘</a>
           <a href="https://instagram.com/osani.com" target="_blank" rel="noopener noreferrer" title="Instagram">📸</a>
           <a href="https://twitter.com/osani_com" target="_blank" rel="noopener noreferrer" title="Twitter / X">🐦</a>
+          <a href="https://youtube.com/@osani.com" target="_blank" rel="noopener noreferrer" title="YouTube">▶️</a>
+          <a href="https://pinterest.com/osani.com" target="_blank" rel="noopener noreferrer" title="Pinterest">📌</a>
         </div>
       </div>
     </div>
@@ -1990,25 +2097,208 @@
       <div class="footer-bottom-links">
         <span onclick="openAboutModal()">About Us</span>
         <span onclick="openPolicyModal('terms')">Terms &amp; Conditions</span>
+        <span onclick="openPolicyModal('return')">Return Policy</span>
+        <span onclick="openPolicyModal('privacy')">Privacy Policy</span>
       </div>
     </div>
   </footer>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase SDK (compat build - works with plain script tags, no build step needed) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
 
   <script>
     let productsDB = [
+      /* ================= JEWELRY (25 items: 5 per sub) ================= */
       { id: "JW01", category: "jewelry", sub: "choker", title: "Royal Kundan Choker Necklace with Matching Earrings", img: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop", price: "2,499", orig: "4,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (342)" },
       { id: "JW02", category: "jewelry", sub: "choker", title: "Victorian Polki Stone Studded Wedding Choker Set", img: "https://images.unsplash.com/photo-1611591475819-79b8b73810f1?w=600&auto=format&fit=crop", price: "3,199", orig: "6,299", disc: "49% off", rating: "⭐⭐⭐⭐⭐ (210)" },
+      { id: "JW03", category: "jewelry", sub: "choker", title: "Meenakari Enamel Bridal Statement Choker", img: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&auto=format&fit=crop", price: "1,999", orig: "3,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (145)" },
+      { id: "JW04", category: "jewelry", sub: "choker", title: "Emerald Green Stone Beaded Royal Choker", img: "https://images.unsplash.com/photo-1599643477877-530eb83abc8e?w=600&auto=format&fit=crop", price: "2,799", orig: "5,499", disc: "49% off", rating: "⭐⭐⭐⭐⭐ (98)" },
+      { id: "JW05", category: "jewelry", sub: "choker", title: "Minimalist Pearl Choker Necklace for Reception", img: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&auto=format&fit=crop", price: "1,499", orig: "2,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (305)" },
+
+      { id: "JW06", category: "jewelry", sub: "temple", title: "Antique Temple Gold Plated Bell Jhumka Earrings", img: "https://images.unsplash.com/photo-1635767798638-3e25273a8236?w=600&auto=format&fit=crop", price: "1,299", orig: "2,599", disc: "50% off", rating: "⭐⭐⭐⭐☆ (189)" },
+      { id: "JW07", category: "jewelry", sub: "temple", title: "Goddess Lakshmi Motif Antique Haram Necklace", img: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop", price: "3,499", orig: "6,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (412)" },
+      { id: "JW08", category: "jewelry", sub: "temple", title: "South Indian Traditional Nagas Work Bangle", img: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&auto=format&fit=crop", price: "1,899", orig: "3,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (92)" },
+      { id: "JW09", category: "jewelry", sub: "temple", title: "Ruby & Emerald Studded Antique Kemp Jhumkas", img: "https://images.unsplash.com/photo-1635767798638-3e25273a8236?w=600&auto=format&fit=crop", price: "1,599", orig: "3,199", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (230)" },
+      { id: "JW10", category: "jewelry", sub: "temple", title: "Classic South Indian Temple Coin Long Necklace", img: "https://images.unsplash.com/photo-1611591475819-79b8b73810f1?w=600&auto=format&fit=crop", price: "4,199", orig: "8,499", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (178)" },
+
+      { id: "JW11", category: "jewelry", sub: "bracelet", title: "Silver Plated Sparkle CZ Tennis Bracelet", img: "https://images.unsplash.com/photo-1611591475819-79b8b73810f1?w=600&auto=format&fit=crop", price: "1,899", orig: "3,499", disc: "45% off", rating: "⭐⭐⭐⭐⭐ (512)" },
+      { id: "JW12", category: "jewelry", sub: "bracelet", title: "Rose Gold Infinity Charm Crystal Bracelet", img: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&auto=format&fit=crop", price: "1,199", orig: "2,399", disc: "50% off", rating: "⭐⭐⭐⭐☆ (320)" },
+      { id: "JW13", category: "jewelry", sub: "bracelet", title: "18K Gold Plated Sleek Everyday Cuff Bracelet", img: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&auto=format&fit=crop", price: "1,599", orig: "3,199", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (167)" },
+      { id: "JW14", category: "jewelry", sub: "bracelet", title: "Interlocking Circles Geometric Silver Bracelet", img: "https://images.unsplash.com/photo-1611591475819-79b8b73810f1?w=600&auto=format&fit=crop", price: "1,399", orig: "2,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (211)" },
+      { id: "JW15", category: "jewelry", sub: "bracelet", title: "Multi-Layered Pearl & Crystal Delicate Bracelet", img: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop", price: "999", orig: "1,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (140)" },
+
+      { id: "JW16", category: "jewelry", sub: "ring", title: "Classic Solitaire Rose Gold Diamond Cut Ring", img: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&auto=format&fit=crop", price: "3,199", orig: "5,999", disc: "46% off", rating: "⭐⭐⭐⭐⭐ (428)" },
+      { id: "JW17", category: "jewelry", sub: "ring", title: "Adjustable Silver Crown Princess Finger Ring", img: "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=600&auto=format&fit=crop", price: "899", orig: "1,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (295)" },
+      { id: "JW18", category: "jewelry", sub: "ring", title: "Vintage Emerald Cut Cocktail Party Ring", img: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&auto=format&fit=crop", price: "1,799", orig: "3,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (184)" },
+      { id: "JW19", category: "jewelry", sub: "ring", title: "Dual Heart Linked Interlocked Silver Ring", img: "https://images.unsplash.com/photo-1611591475819-79b8b73810f1?w=600&auto=format&fit=crop", price: "1,099", orig: "2,199", disc: "50% off", rating: "⭐⭐⭐⭐☆ (120)" },
+      { id: "JW20", category: "jewelry", sub: "ring", title: "Bold Statement Floral Zirconia Cocktail Ring", img: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop", price: "2,299", orig: "4,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (310)" },
+
+      { id: "JW21", category: "jewelry", sub: "bangle", title: "Traditional Gold Plated Pearl Bangle Kada Set", img: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&auto=format&fit=crop", price: "1,599", orig: "2,999", disc: "47% off", rating: "⭐⭐⭐⭐☆ (265)" },
+      { id: "JW22", category: "jewelry", sub: "bangle", title: "Sparkling American Diamond Openable Kada", img: "https://images.unsplash.com/photo-1611591475819-79b8b73810f1?w=600&auto=format&fit=crop", price: "2,099", orig: "4,199", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (411)" },
+      { id: "JW23", category: "jewelry", sub: "bangle", title: "Oxidized Silver Heavy Tribal Bangles (Set of 4)", img: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&auto=format&fit=crop", price: "1,299", orig: "2,599", disc: "50% off", rating: "⭐⭐⭐⭐☆ (189)" },
+      { id: "JW24", category: "jewelry", sub: "bangle", title: "Ruby Stone Embedded Designer Gold Kada", img: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop", price: "2,499", orig: "4,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (225)" },
+      { id: "JW25", category: "jewelry", sub: "bangle", title: "Daily Wear Sleek Rose Gold Plated Bangles", img: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&auto=format&fit=crop", price: "1,199", orig: "2,399", disc: "50% off", rating: "⭐⭐⭐⭐☆ (301)" },
+
+      /* ================= WOMEN'S CLOTHING (25 items: 5 per sub) ================= */
       { id: "WM01", category: "women", sub: "saree", title: "Banarasi Silk Embroidered Festive Saree with Blouse Piece", img: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop", price: "2,899", orig: "6,499", disc: "55% off", rating: "⭐⭐⭐⭐⭐ (612)" },
       { id: "WM02", category: "women", sub: "saree", title: "Kanjivaram Pure Zari Woven Silk Saree", img: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&auto=format&fit=crop", price: "4,299", orig: "8,999", disc: "52% off", rating: "⭐⭐⭐⭐⭐ (510)" },
+      { id: "WM03", category: "women", sub: "saree", title: "Designer Georgette Sequence Work Party Saree", img: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop", price: "1,999", orig: "3,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (319)" },
+      { id: "WM04", category: "women", sub: "saree", title: "Chiffon Printed Floral Casual Daily Saree", img: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&auto=format&fit=crop", price: "1,199", orig: "2,499", disc: "52% off", rating: "⭐⭐⭐⭐☆ (190)" },
+      { id: "WM05", category: "women", sub: "saree", title: "Organza Embroidered Floral Semi-Transparent Saree", img: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop", price: "2,599", orig: "5,199", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (245)" },
+
+      { id: "WM06", category: "women", sub: "gown", title: "Elegant Floral Print Flared Summer Evening Gown", img: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&auto=format&fit=crop", price: "1,999", orig: "3,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (290)" },
+      { id: "WM07", category: "women", sub: "gown", title: "Net Embroidered Party Wear Long Floor-Length Gown", img: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=600&auto=format&fit=crop", price: "3,499", orig: "6,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (412)" },
+      { id: "WM08", category: "women", sub: "gown", title: "Satin Silk Cocktail Slit Evening Gown", img: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&auto=format&fit=crop", price: "2,799", orig: "5,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (180)" },
+      { id: "WM09", category: "women", sub: "gown", title: "Indo-Western Tiered Ruffle Festive Gown", img: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&auto=format&fit=crop", price: "2,299", orig: "4,599", disc: "50% off", rating: "⭐⭐⭐⭐☆ (145)" },
+      { id: "WM10", category: "women", sub: "gown", title: "Velvet Embroidered Winter Reception Gown", img: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=600&auto=format&fit=crop", price: "3,899", orig: "7,799", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (320)" },
+
+      { id: "WM11", category: "women", sub: "kurti", title: "Pure Cotton Handcrafted Anarkali Kurti & Pant Set", img: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&auto=format&fit=crop", price: "1,649", orig: "3,299", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (419)" },
+      { id: "WM12", category: "women", sub: "kurti", title: "Jaipuri Block Printed Rayon Straight Kurti", img: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop", price: "899", orig: "1,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (380)" },
+      { id: "WM13", category: "women", sub: "kurti", title: "Chikankari Embroidered Faux Georgette Long Kurta", img: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&auto=format&fit=crop", price: "1,399", orig: "2,799", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (512)" },
+      { id: "WM14", category: "women", sub: "kurti", title: "Designer Festive Sharara Kurta Set with Dupatta", img: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&auto=format&fit=crop", price: "2,499", orig: "4,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (275)" },
+      { id: "WM15", category: "women", sub: "kurti", title: "Short Peplum Style Kurti with Dhoti Pants", img: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&auto=format&fit=crop", price: "1,499", orig: "2,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (198)" },
+
+      { id: "WM16", category: "women", sub: "western", title: "Chic Casual Western Top with Slim Stretch Fit", img: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&auto=format&fit=crop", price: "1,399", orig: "2,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (380)" },
+      { id: "WM17", category: "women", sub: "western", title: "Off-Shoulder Puff Sleeve Party Wear Top", img: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=600&auto=format&fit=crop", price: "1,199", orig: "2,399", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (290)" },
+      { id: "WM18", category: "women", sub: "western", title: "High Neck Ribbed Knit Winter Sweater Top", img: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&auto=format&fit=crop", price: "1,599", orig: "3,199", disc: "50% off", rating: "⭐⭐⭐⭐☆ (165)" },
+      { id: "WM19", category: "women", sub: "western", title: "Satin Wrap-Around Stylish Crop Blouse", img: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=600&auto=format&fit=crop", price: "1,299", orig: "2,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (210)" },
+      { id: "WM20", category: "women", sub: "western", title: "Casual Oversized Graphic Printed Cotton T-Shirt", img: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&auto=format&fit=crop", price: "799", orig: "1,599", disc: "50% off", rating: "⭐⭐⭐⭐☆ (450)" },
+
+      { id: "WM21", category: "women", sub: "lehenga", title: "Royal Embroidered Semi-Stitched Velvet Party Lehenga", img: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&auto=format&fit=crop", price: "4,499", orig: "8,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (743)" },
+      { id: "WM22", category: "women", sub: "lehenga", title: "Bridal Heavy Zardozi Work Red Lehenga Choli", img: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop", price: "7,999", orig: "15,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (512)" },
+      { id: "WM23", category: "women", sub: "lehenga", title: "Pastel Net Sequenced Reception Lehenga", img: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&auto=format&fit=crop", price: "3,899", orig: "7,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (320)" },
+      { id: "WM24", category: "women", sub: "lehenga", title: "Bandhani Printed Traditional Gujarati Lehenga Set", img: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&auto=format&fit=crop", price: "2,899", orig: "5,799", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (190)" },
+      { id: "WM25", category: "women", sub: "lehenga", title: "Floral Organza Sangeet Wear Designer Lehenga", img: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&auto=format&fit=crop", price: "3,499", orig: "6,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (230)" },
+
+      /* ================= MEN'S CLOTHING (25 items: 5 per sub) ================= */
       { id: "MN01", category: "men", sub: "shirt", title: "Premium Slim Fit Cotton Formal Dress Shirt", img: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&auto=format&fit=crop", price: "1,199", orig: "2,399", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (489)" },
-      { id: "SH01", category: "shoes", sub: "formal_shoe", title: "Men's Handcrafted Genuine Leather Oxford Shoes", img: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&auto=format&fit=crop", price: "2,999", orig: "5,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (412)" }
+      { id: "MN02", category: "men", sub: "shirt", title: "Casual Linen Breathable Summer Shirt", img: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&auto=format&fit=crop", price: "1,299", orig: "2,599", disc: "50% off", rating: "⭐⭐⭐⭐☆ (310)" },
+      { id: "MN03", category: "men", sub: "shirt", title: "Checked Casual Button-Down Regular Fit Shirt", img: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&auto=format&fit=crop", price: "999", orig: "1,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (412)" },
+      { id: "MN04", category: "men", sub: "shirt", title: "Mandarin Collar Cotton Party Wear Shirt", img: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&auto=format&fit=crop", price: "1,399", orig: "2,799", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (198)" },
+      { id: "MN05", category: "men", sub: "shirt", title: "Denim Casual Washed Blue Shirt for Men", img: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&auto=format&fit=crop", price: "1,499", orig: "2,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (275)" },
+
+      { id: "MN06", category: "men", sub: "blazer", title: "Royal Navy Blue Two-Piece Tuxedo Formal Blazer", img: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&auto=format&fit=crop", price: "5,999", orig: "11,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (310)" },
+      { id: "MN07", category: "men", sub: "blazer", title: "Classic Black Peak Lapel Business Suit", img: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&auto=format&fit=crop", price: "6,499", orig: "12,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (412)" },
+      { id: "MN08", category: "men", sub: "blazer", title: "Checkered Casual Sports Blazer for Men", img: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&auto=format&fit=crop", price: "3,899", orig: "7,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (190)" },
+      { id: "MN09", category: "men", sub: "blazer", title: "Velvet Party Wear Maroon Evening Blazer", img: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&auto=format&fit=crop", price: "4,599", orig: "9,199", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (220)" },
+      { id: "MN10", category: "men", sub: "blazer", title: "Grey Slim Fit Single-Breasted Office Suit", img: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&auto=format&fit=crop", price: "5,199", orig: "10,399", disc: "50% off", rating: "⭐⭐⭐⭐☆ (165)" },
+
+      { id: "MN11", category: "men", sub: "kurta", title: "Traditional Designer Silk Blend Kurta Pajama Set", img: "https://images.unsplash.com/photo-1583391733975-08107937536f?w=600&auto=format&fit=crop", price: "2,199", orig: "4,299", disc: "49% off", rating: "⭐⭐⭐⭐☆ (195)" },
+      { id: "MN12", category: "men", sub: "kurta", title: "Pathani Cotton Kurta with Salwar Set", img: "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=600&auto=format&fit=crop", price: "1,799", orig: "3,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (240)" },
+      { id: "MN13", category: "men", sub: "kurta", title: "Embroidered Nehru Jacket with Kurta Pyjama", img: "https://images.unsplash.com/photo-1583391733975-08107937536f?w=600&auto=format&fit=crop", price: "2,999", orig: "5,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (310)" },
+      { id: "MN14", category: "men", sub: "kurta", title: "Short Casual Cotton Kurta for Men", img: "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=600&auto=format&fit=crop", price: "899", orig: "1,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (180)" },
+      { id: "MN15", category: "men", sub: "kurta", title: "Festive Brocade Asymmetric Indo-Western Kurta", img: "https://images.unsplash.com/photo-1583391733975-08107937536f?w=600&auto=format&fit=crop", price: "2,499", orig: "4,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (145)" },
+
+      { id: "MN16", category: "men", sub: "jacket", title: "Classic Vintage Denim Sherpa Jacket for Men", img: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&auto=format&fit=crop", price: "2,499", orig: "4,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (522)" },
+      { id: "MN17", category: "men", sub: "jacket", title: "Faux Leather Biker Moto Jacket", img: "https://images.unsplash.com/photo-1520975954732-35dd22299614?w=600&auto=format&fit=crop", price: "3,199", orig: "6,399", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (410)" },
+      { id: "MN18", category: "men", sub: "jacket", title: "Waterproof Lightweight Hooded Windbreaker", img: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&auto=format&fit=crop", price: "1,899", orig: "3,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (230)" },
+      { id: "MN19", category: "men", sub: "jacket", title: "Winter Puffer Quilted Warm Jacket", img: "https://images.unsplash.com/photo-1520975954732-35dd22299614?w=600&auto=format&fit=crop", price: "2,799", orig: "5,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (319)" },
+      { id: "MN20", category: "men", sub: "jacket", title: "Casual Bomber Streetwear Jacket", img: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&auto=format&fit=crop", price: "1,999", orig: "3,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (195)" },
+
+      { id: "MN21", category: "men", sub: "polo", title: "Breathable Pique Cotton Solid Casual Polo T-Shirt", img: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=600&auto=format&fit=crop", price: "899", orig: "1,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (367)" },
+      { id: "MN22", category: "men", sub: "polo", title: "Colorblocked Sports Gym Athletic T-Shirt", img: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop", price: "749", orig: "1,499", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (280)" },
+      { id: "MN23", category: "men", sub: "polo", title: "Striped Premium Cotton Collar Polo Shirt", img: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=600&auto=format&fit=crop", price: "999", orig: "1,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (210)" },
+      { id: "MN24", category: "men", sub: "polo", title: "Oversized Heavyweight Cotton Streetwear Tee", img: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop", price: "849", orig: "1,699", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (415)" },
+      { id: "MN25", category: "men", sub: "polo", title: "V-Neck Slim Fit Casual Cotton T-Shirt", img: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=600&auto=format&fit=crop", price: "699", orig: "1,399", disc: "50% off", rating: "⭐⭐⭐⭐☆ (188)" },
+
+      /* ================= SHOES & FOOTWEAR (25 items: 5 per sub) ================= */
+      { id: "SH01", category: "shoes", sub: "formal_shoe", title: "Men's Handcrafted Genuine Leather Oxford Shoes", img: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&auto=format&fit=crop", price: "2,999", orig: "5,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (412)" },
+      { id: "SH02", category: "shoes", sub: "formal_shoe", title: "Classic Leather Derby Business Dress Shoes", img: "https://images.unsplash.com/photo-1533867617858-e7d9790afd0aa?w=600&auto=format&fit=crop", price: "2,799", orig: "5,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (280)" },
+      { id: "SH03", category: "shoes", sub: "formal_shoe", title: "Monk Strap Tan Formal Leather Shoes", img: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&auto=format&fit=crop", price: "3,299", orig: "6,599", disc: "50% off", rating: "⭐⭐⭐⭐☆ (190)" },
+      { id: "SH04", category: "shoes", sub: "formal_shoe", title: "Slip-on Office Formal Brogues", img: "https://images.unsplash.com/photo-1533867617858-e7d9790afd0aa?w=600&auto=format&fit=crop", price: "2,499", orig: "4,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (145)" },
+      { id: "SH05", category: "shoes", sub: "formal_shoe", title: "Glossy Patent Leather Tuxedo Shoes", img: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&auto=format&fit=crop", price: "3,599", orig: "7,199", disc: "50% off", rating: "⭐⭐⭐⭐☆ (210)" },
+
+      { id: "SH06", category: "shoes", sub: "sneaker", title: "All-Day Comfort Lightweight Breathable Sneakers", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop", price: "2,299", orig: "4,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (892)" },
+      { id: "SH07", category: "shoes", sub: "sneaker", title: "Retro White Streetwear Casual Sneakers", img: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600&auto=format&fit=crop", price: "1,899", orig: "3,799", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (510)" },
+      { id: "SH08", category: "shoes", sub: "sneaker", title: "Running Sports Mesh Athletic Shoes", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop", price: "2,099", orig: "4,199", disc: "50% off", rating: "⭐⭐⭐⭐☆ (340)" },
+      { id: "SH09", category: "shoes", sub: "sneaker", title: "Chunky Sole Trendy Casual Fashion Sneakers", img: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600&auto=format&fit=crop", price: "2,499", orig: "4,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (225)" },
+      { id: "SH10", category: "shoes", sub: "sneaker", title: "High-Top Canvas Skateboarding Sneakers", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop", price: "1,599", orig: "3,199", disc: "50% off", rating: "⭐⭐⭐⭐☆ (180)" },
+
+      { id: "SH11", category: "shoes", sub: "heel", title: "Women's Elegant Pointed Stiletto High Heels", img: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&auto=format&fit=crop", price: "1,899", orig: "3,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (315)" },
+      { id: "SH12", category: "shoes", sub: "heel", title: "Block Heel Party Wear Strappy Sandals", img: "https://images.unsplash.com/photo-1535043934128-cf0b28d52f95?w=600&auto=format&fit=crop", price: "1,599", orig: "3,199", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (410)" },
+      { id: "SH13", category: "shoes", sub: "heel", title: "Bridal Crystal Embellished Platform Heels", img: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&auto=format&fit=crop", price: "2,499", orig: "4,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (210)" },
+      { id: "SH14", category: "shoes", sub: "heel", title: "Kitten Heel Office Wear Comfortable Pumps", img: "https://images.unsplash.com/photo-1535043934128-cf0b28d52f95?w=600&auto=format&fit=crop", price: "1,399", orig: "2,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (165)" },
+      { id: "SH15", category: "shoes", sub: "heel", title: "Metallic Gold Evening Party Sandals", img: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&auto=format&fit=crop", price: "1,799", orig: "3,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (140)" },
+
+      { id: "SH16", category: "shoes", sub: "jutti", title: "Royal Handcrafted Zari Embroidered Punjabi Jutti", img: "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=600&auto=format&fit=crop", price: "1,299", orig: "2,499", disc: "48% off", rating: "⭐⭐⭐⭐⭐ (240)" },
+      { id: "SH17", category: "shoes", sub: "jutti", title: "Bridal Gold Thread Work Mojari for Women", img: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=600&auto=format&fit=crop", price: "1,499", orig: "2,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (190)" },
+      { id: "SH18", category: "shoes", sub: "jutti", title: "Multi-color Thread Phulkari Ethnic Jutti", img: "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=600&auto=format&fit=crop", price: "999", orig: "1,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (310)" },
+      { id: "SH19", category: "shoes", sub: "jutti", title: "Men's Ethnic Leather Sherwani Mojari", img: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=600&auto=format&fit=crop", price: "1,599", orig: "3,199", disc: "50% off", rating: "⭐⭐⭐⭐☆ (145)" },
+      { id: "SH20", category: "shoes", sub: "jutti", title: "Velvet Beaded Party Wear Ethnic Khussa", img: "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=600&auto=format&fit=crop", price: "1,199", orig: "2,399", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (205)" },
+
+      { id: "SH21", category: "shoes", sub: "loafer", title: "Casual Slip-On Comfort Loafers for Daily Wear", img: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=600&auto=format&fit=crop", price: "1,499", orig: "2,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (198)" },
+      { id: "SH22", category: "shoes", sub: "loafer", title: "Men's Suede Leather Driving Loafers", img: "https://images.unsplash.com/photo-1533867617858-e7d9790afd0aa?w=600&auto=format&fit=crop", price: "1,999", orig: "3,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (312)" },
+      { id: "SH23", category: "shoes", sub: "loafer", title: "Tassel Accent Formal Office Loafers", img: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=600&auto=format&fit=crop", price: "2,199", orig: "4,399", disc: "50% off", rating: "⭐⭐⭐⭐☆ (180)" },
+      { id: "SH24", category: "shoes", sub: "loafer", title: "Knitted Breathable Summer Casual Loafers", img: "https://images.unsplash.com/photo-1533867617858-e7d9790afd0aa?w=600&auto=format&fit=crop", price: "1,299", orig: "2,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (245)" },
+      { id: "SH25", category: "shoes", sub: "loafer", title: "Classic Penny Leather Loafers", img: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=600&auto=format&fit=crop", price: "2,399", orig: "4,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (160)" },
+
+      /* ================= HOME DECOR (25 items: 5 per sub) ================= */
+      { id: "HD01", category: "decor", sub: "painting", title: "Modern Abstract Canvas Wall Art Painting Set", img: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=600&auto=format&fit=crop", price: "1,799", orig: "3,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (310)" },
+      { id: "HD02", category: "decor", sub: "painting", title: "Golden Buddha Peaceful Canvas Wall Painting", img: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=600&auto=format&fit=crop", price: "1,599", orig: "3,199", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (420)" },
+      { id: "HD03", category: "decor", sub: "painting", title: "Sceneries Landscape Nature Framed Wall Art", img: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=600&auto=format&fit=crop", price: "2,199", orig: "4,399", disc: "50% off", rating: "⭐⭐⭐⭐☆ (190)" },
+      { id: "HD04", category: "decor", sub: "painting", title: "Boho Minimalist Line Art Canvas Panel", img: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=600&auto=format&fit=crop", price: "1,299", orig: "2,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (145)" },
+      { id: "HD05", category: "decor", sub: "painting", title: "Multi-Panel Floral Canvas Wall Decor", img: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=600&auto=format&fit=crop", price: "2,499", orig: "4,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (220)" },
+
+      { id: "HD06", category: "decor", sub: "vase", title: "Nordic Minimalist Ceramic Flower Vase Decor", img: "https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?w=600&auto=format&fit=crop", price: "999", orig: "1,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (175)" },
+      { id: "HD07", category: "decor", sub: "vase", title: "Handcrafted Terracotta Rustic Flower Pot", img: "https://images.unsplash.com/photo-1612196808214-b8e1f6145a8c?w=600&auto=format&fit=crop", price: "799", orig: "1,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (210)" },
+      { id: "HD08", category: "decor", sub: "vase", title: "Modern Geometric Glass Table Top Vase", img: "https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?w=600&auto=format&fit=crop", price: "1,199", orig: "2,399", disc: "50% off", rating: "⭐⭐⭐⭐☆ (130)" },
+      { id: "HD09", category: "decor", sub: "vase", title: "Golden Metal Finish Luxury Flower Vase", img: "https://images.unsplash.com/photo-1612196808214-b8e1f6145a8c?w=600&auto=format&fit=crop", price: "1,499", orig: "2,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (190)" },
+      { id: "HD10", category: "decor", sub: "vase", title: "White Ceramic Abstract Human Face Vase", img: "https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?w=600&auto=format&fit=crop", price: "1,299", orig: "2,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (310)" },
+
+      { id: "HD11", category: "decor", sub: "lamp", title: "Warm Ambient Wooden Bedside Table Lamp", img: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=600&auto=format&fit=crop", price: "1,499", orig: "2,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (420)" },
+      { id: "HD12", category: "decor", sub: "lamp", title: "Vintage Brass Study Desk Reading Lamp", img: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=600&auto=format&fit=crop", price: "2,199", orig: "4,399", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (310)" },
+      { id: "HD13", category: "decor", sub: "lamp", title: "Himalayan Natural Crystal Salt Lamp", img: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=600&auto=format&fit=crop", price: "1,299", orig: "2,599", disc: "50% off", rating: "⭐⭐⭐⭐☆ (512)" },
+      { id: "HD14", category: "decor", sub: "lamp", title: "Minimalist Fabric Shade Living Room Floor Lamp", img: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=600&auto=format&fit=crop", price: "3,499", orig: "6,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (180)" },
+      { id: "HD15", category: "decor", sub: "lamp", title: "LED Touch Sensor Bedside Mood Lamp", img: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=600&auto=format&fit=crop", price: "999", orig: "1,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (245)" },
+
+      { id: "HD16", category: "decor", sub: "idol", title: "Vintage Handcrafted Solid Brass Ganesha Idol", img: "https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=600&auto=format&fit=crop", price: "2,299", orig: "4,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (650)" },
+      { id: "HD17", category: "decor", sub: "idol", title: "Radiant Brass Nataraja Dancing Lord Shiva Statue", img: "https://images.unsplash.com/photo-1567157577867-05ccb1388e66?w=600&auto=format&fit=crop", price: "3,199", orig: "6,399", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (310)" },
+      { id: "HD18", category: "decor", sub: "idol", title: "Laughing Buddha Feng Shui Prosperity Statue", img: "https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=600&auto=format&fit=crop", price: "1,499", orig: "2,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (215)" },
+      { id: "HD19", category: "decor", sub: "idol", title: "Radha Krishna Marble Dust Divine Idol", img: "https://images.unsplash.com/photo-1567157577867-05ccb1388e66?w=600&auto=format&fit=crop", price: "2,799", orig: "5,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (180)" },
+      { id: "HD20", category: "decor", sub: "idol", title: "Brass Tortoise Plate Feng Shui Showpiece", img: "https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=600&auto=format&fit=crop", price: "999", orig: "1,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (140)" },
+
+      { id: "HD21", category: "decor", sub: "cushion", title: "Boho Embroidered Cotton Cushion Covers (Set of 5)", img: "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=600&auto=format&fit=crop", price: "899", orig: "1,899", disc: "52% off", rating: "⭐⭐⭐⭐☆ (289)" },
+      { id: "HD22", category: "decor", sub: "cushion", title: "Velvet Luxury Solid Color Sofa Cushion Covers", img: "https://images.unsplash.com/photo-1579656381226-5fc0f0100c3b?w=600&auto=format&fit=crop", price: "799", orig: "1,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (340)" },
+      { id: "HD23", category: "decor", sub: "cushion", title: "Geometric Pattern Printed Living Room Throw Pillows", img: "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=600&auto=format&fit=crop", price: "999", orig: "1,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (190)" },
+      { id: "HD24", category: "decor", sub: "cushion", title: "Mandala Print Traditional Cotton Cushion Cover", img: "https://images.unsplash.com/photo-1579656381226-5fc0f0100c3b?w=600&auto=format&fit=crop", price: "699", orig: "1,399", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (210)" },
+      { id: "HD25", category: "decor", sub: "cushion", title: "Faux Fur Fluffy Cozy Winter Cushion Cases", img: "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=600&auto=format&fit=crop", price: "1,099", orig: "2,199", disc: "50% off", rating: "⭐⭐⭐⭐☆ (165)" },
+
+      { id: "CM01", category: "cosmetics", sub: "makeup", title: "Matte Finish Long-Lasting Liquid Lipstick Set", img: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=600&auto=format&fit=crop", price: "699", orig: "1,399", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (420)" },
+      { id: "CM02", category: "cosmetics", sub: "makeup", title: "HD Full Coverage Liquid Foundation", img: "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=600&auto=format&fit=crop", price: "899", orig: "1,799", disc: "50% off", rating: "⭐⭐⭐⭐☆ (312)" },
+      { id: "CM03", category: "cosmetics", sub: "makeup", title: "24H Waterproof Eyeliner & Kajal Combo", img: "https://images.unsplash.com/photo-1631730486572-226d1f595b68?w=600&auto=format&fit=crop", price: "399", orig: "799", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (505)" },
+      { id: "CM04", category: "cosmetics", sub: "makeup", title: "Shimmer Eyeshadow Palette - 18 Shades", img: "https://images.unsplash.com/photo-1583241800698-e8ab01c67c58?w=600&auto=format&fit=crop", price: "999", orig: "1,999", disc: "50% off", rating: "⭐⭐⭐⭐☆ (268)" },
+      { id: "CM05", category: "cosmetics", sub: "makeup", title: "Compact Face Powder with Mirror & Puff", img: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=600&auto=format&fit=crop", price: "549", orig: "1,099", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (190)" },
+
+      { id: "CM06", category: "cosmetics", sub: "skincare", title: "Vitamin C Brightening Face Serum", img: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600&auto=format&fit=crop", price: "649", orig: "1,299", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (612)" },
+      { id: "CM07", category: "cosmetics", sub: "skincare", title: "Hyaluronic Acid Hydrating Moisturizer Gel", img: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&auto=format&fit=crop", price: "549", orig: "1,099", disc: "50% off", rating: "⭐⭐⭐⭐☆ (388)" },
+      { id: "CM08", category: "cosmetics", sub: "skincare", title: "Charcoal Deep Cleansing Face Wash", img: "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=600&auto=format&fit=crop", price: "299", orig: "599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (445)" },
+      { id: "CM09", category: "cosmetics", sub: "skincare", title: "SPF 50 PA+++ Sunscreen Lotion", img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=600&auto=format&fit=crop", price: "449", orig: "899", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (530)" },
+      { id: "CM10", category: "cosmetics", sub: "skincare", title: "Under Eye Cream for Dark Circles & Puffiness", img: "https://images.unsplash.com/photo-1598440947619-2c35cc9dab30?w=600&auto=format&fit=crop", price: "599", orig: "1,199", disc: "50% off", rating: "⭐⭐⭐⭐☆ (270)" },
+
+      { id: "CM11", category: "cosmetics", sub: "haircare", title: "Argan Oil Nourishing Hair Serum", img: "https://images.unsplash.com/photo-1626784215021-2e39ccf971cd?w=600&auto=format&fit=crop", price: "499", orig: "999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (356)" },
+      { id: "CM12", category: "cosmetics", sub: "haircare", title: "Anti-Dandruff Keratin Shampoo & Conditioner Set", img: "https://images.unsplash.com/photo-1556228720-6d0f6d3f1e4c?w=600&auto=format&fit=crop", price: "649", orig: "1,299", disc: "50% off", rating: "⭐⭐⭐⭐☆ (298)" },
+      { id: "CM13", category: "cosmetics", sub: "haircare", title: "Onion Hair Oil for Hair Fall Control", img: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=600&auto=format&fit=crop", price: "349", orig: "699", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (610)" },
+      { id: "CM14", category: "cosmetics", sub: "haircare", title: "Deep Conditioning Hair Mask Treatment", img: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&auto=format&fit=crop", price: "549", orig: "1,099", disc: "50% off", rating: "⭐⭐⭐⭐☆ (215)" },
+      { id: "CM15", category: "cosmetics", sub: "haircare", title: "Heat Protectant Hair Styling Spray", img: "https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=600&auto=format&fit=crop", price: "399", orig: "799", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (178)" },
+
+      { id: "CM16", category: "cosmetics", sub: "fragrance", title: "Luxury Eau De Parfum for Women", img: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=600&auto=format&fit=crop", price: "1,299", orig: "2,599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (480)" },
+      { id: "CM17", category: "cosmetics", sub: "fragrance", title: "Woody Musk Cologne for Men", img: "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=600&auto=format&fit=crop", price: "1,199", orig: "2,399", disc: "50% off", rating: "⭐⭐⭐⭐☆ (325)" },
+      { id: "CM18", category: "cosmetics", sub: "fragrance", title: "Travel Size Perfume Gift Set (Pack of 4)", img: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=600&auto=format&fit=crop", price: "899", orig: "1,799", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (240)" },
+      { id: "CM19", category: "cosmetics", sub: "fragrance", title: "Long Lasting Deodorant Body Spray Combo", img: "https://images.unsplash.com/photo-1556228852-80b6e2645a58?w=600&auto=format&fit=crop", price: "349", orig: "699", disc: "50% off", rating: "⭐⭐⭐⭐☆ (410)" },
+      { id: "CM20", category: "cosmetics", sub: "fragrance", title: "Scented Body Mist for Everyday Freshness", img: "https://images.unsplash.com/photo-1595425964272-6d8cbee1cb9b?w=600&auto=format&fit=crop", price: "449", orig: "899", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (195)" },
+
+      { id: "CM21", category: "cosmetics", sub: "tools", title: "Professional Makeup Brush Set (12 Pieces)", img: "https://images.unsplash.com/photo-1522335789203-9bcd63e73dfe?w=600&auto=format&fit=crop", price: "599", orig: "1,199", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (338)" },
+      { id: "CM22", category: "cosmetics", sub: "tools", title: "Rose Quartz Facial Roller & Gua Sha Set", img: "https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?w=600&auto=format&fit=crop", price: "449", orig: "899", disc: "50% off", rating: "⭐⭐⭐⭐☆ (222)" },
+      { id: "CM23", category: "cosmetics", sub: "tools", title: "Cordless Rechargeable Hair Straightener", img: "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=600&auto=format&fit=crop", price: "1,499", orig: "2,999", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (285)" },
+      { id: "CM24", category: "cosmetics", sub: "tools", title: "Beauty Blender Makeup Sponge (Set of 3)", img: "https://images.unsplash.com/photo-1596704017254-9b121068fb31?w=600&auto=format&fit=crop", price: "299", orig: "599", disc: "50% off", rating: "⭐⭐⭐⭐⭐ (402)" },
+      { id: "CM25", category: "cosmetics", sub: "tools", title: "LED Vanity Mirror with Touch Control Lighting", img: "https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?w=600&auto=format&fit=crop", price: "1,199", orig: "2,399", disc: "50% off", rating: "⭐⭐⭐⭐☆ (160)" }
     ];
 
+    // =====================================================================
+    // FIREBASE CONFIG
+    // =====================================================================
     const firebaseConfig = {
       apiKey: "AIzaSyARcy6Pr85p8-4UVbNBh1LILR4nfVS3JIU",
       authDomain: "osani-84e2e.firebaseapp.com",
@@ -2019,9 +2309,11 @@
     };
 
     let db = null;
+    let fns = null;
     try {
       firebase.initializeApp(firebaseConfig);
       db = firebase.firestore();
+      fns = firebase.functions();
     } catch (e) {
       console.warn("Firebase not configured yet — showing built-in catalog only.", e);
     }
@@ -2053,6 +2345,7 @@
       });
     }
 
+    // FIXED: Cart starts completely empty instead of pre-populating dummy items.
     let cartItems = [];
     let wishlistItems = [];
     let currentUser = null;
@@ -2339,7 +2632,7 @@
     }
 
     // ===================================================================
-    // GENLOOK-STYLE AI TRY-ON BLEND ENGINE (Full Outfit Wrap)
+    // AI TRY-ON
     // ===================================================================
     let tryOnSelectedFile = null;
 
@@ -2370,7 +2663,12 @@
       const file = event.target.files && event.target.files[0];
       if (!file) return;
       if (!file.type.startsWith('image/')) {
-        alert('Please choose an image file.');
+        showTryOnError('Please choose an image file.');
+        return;
+      }
+      // Keep it well under Cloud Functions' request-size limits.
+      if (file.size > 8 * 1024 * 1024) {
+        showTryOnError('That photo is a bit large — please use one under 8MB.');
         return;
       }
       tryOnSelectedFile = file;
@@ -2381,82 +2679,55 @@
       document.getElementById('tryOnGenerateBtn').style.display = 'block';
     }
 
-    function submitTryOn() {
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function showTryOnError(message) {
+      document.getElementById('tryOnUploadStage').style.display = 'none';
+      document.getElementById('tryOnLoadingStage').style.display = 'none';
+      document.getElementById('tryOnResultStage').style.display = 'none';
+      document.getElementById('tryOnErrorStage').style.display = 'block';
+      document.getElementById('tryOnErrorText').innerText = message;
+    }
+
+    async function submitTryOn() {
       if (!tryOnSelectedFile || !activeDetailProduct) return;
+      if (!fns) {
+        showTryOnError('Try-on isn\'t available right now — please try again later.');
+        return;
+      }
 
       document.getElementById('tryOnUploadStage').style.display = 'none';
       document.getElementById('tryOnLoadingStage').style.display = 'block';
 
-      setTimeout(() => {
-        const userImg = new Image();
-        userImg.crossOrigin = "anonymous";
-        userImg.onload = function() {
-          const prodImg = new Image();
-          prodImg.crossOrigin = "anonymous";
-          prodImg.onload = function() {
-            const canvas = document.getElementById('tryOnCanvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = userImg.width;
-            canvas.height = userImg.height;
+      try {
+        const userPhotoBase64 = await fileToBase64(tryOnSelectedFile);
+        const generateTryOnImage = fns.httpsCallable('generateTryOnImage');
+        const res = await generateTryOnImage({
+          productId: activeDetailProduct.id,
+          userPhotoBase64,
+          userPhotoMimeType: tryOnSelectedFile.type || 'image/jpeg',
+        });
 
-            // 1. Draw customer photo as base
-            ctx.drawImage(userImg, 0, 0);
+        const { imageBase64, mimeType } = res.data || {};
+        if (!imageBase64) throw new Error('No image returned.');
 
-            // 2. Genlook AI Full-Torso Draping Blend
-            ctx.save();
-            ctx.globalAlpha = 0.88;
-            ctx.globalCompositeOperation = 'multiply';
-
-            const cat = activeDetailProduct.category;
-            let pWidth, pHeight, pX, pY;
-
-            if (cat === 'women' || cat === 'men') {
-              // Scale garment across upper & lower body to naturally replace the outfit like Genlook
-              pWidth = canvas.width * 0.85;
-              pHeight = (prodImg.height / prodImg.width) * pWidth;
-              pX = (canvas.width - pWidth) / 2;
-              pY = canvas.height * 0.22; // covers from shoulders down to knees/feet
-            } else if (cat === 'jewelry') {
-              pWidth = canvas.width * 0.40;
-              pHeight = (prodImg.height / prodImg.width) * pWidth;
-              pX = (canvas.width - pWidth) / 2;
-              pY = canvas.height * 0.23;
-            } else if (cat === 'shoes') {
-              pWidth = canvas.width * 0.45;
-              pHeight = (prodImg.height / prodImg.width) * pWidth;
-              pX = (canvas.width - pWidth) / 2;
-              pY = canvas.height * 0.65;
-            } else {
-              pWidth = canvas.width * 0.7;
-              pHeight = (prodImg.height / prodImg.width) * pWidth;
-              pX = (canvas.width - pWidth) / 2;
-              pY = canvas.height * 0.3;
-            }
-
-            ctx.drawImage(prodImg, pX, pY, pWidth, pHeight);
-            ctx.restore();
-
-            // 3. Add vibrant color vibrancy overlay
-            ctx.save();
-            ctx.globalAlpha = 0.20;
-            ctx.drawImage(prodImg, pX, pY, pWidth, pHeight);
-            ctx.restore();
-
-            const dataUrl = canvas.toDataURL('image/png');
-            document.getElementById('tryOnResultImg').src = dataUrl;
-            document.getElementById('tryOnDownloadLink').href = dataUrl;
-            document.getElementById('tryOnLoadingStage').style.display = 'none';
-            document.getElementById('tryOnResultStage').style.display = 'block';
-          };
-          prodImg.onerror = function() {
-            document.getElementById('tryOnResultImg').src = userImg.src;
-            document.getElementById('tryOnLoadingStage').style.display = 'none';
-            document.getElementById('tryOnResultStage').style.display = 'block';
-          };
-          prodImg.src = activeDetailProduct.img;
-        };
-        userImg.src = URL.createObjectURL(tryOnSelectedFile);
-      }, 1400);
+        const dataUrl = `data:${mimeType || 'image/png'};base64,${imageBase64}`;
+        document.getElementById('tryOnResultImg').src = dataUrl;
+        document.getElementById('tryOnDownloadLink').href = dataUrl;
+        document.getElementById('tryOnLoadingStage').style.display = 'none';
+        document.getElementById('tryOnResultStage').style.display = 'block';
+      } catch (err) {
+        console.error('Try-on generation failed:', err);
+        const message = (err && err.message) ? err.message : 'Something went wrong generating your try-on image.';
+        showTryOnError(message);
+      }
     }
 
     function backToCatalog() {
@@ -2533,18 +2804,127 @@
       renderProducts(list);
     }
 
-    function doSearch() {
-      const q = document.getElementById('searchInput').value.toLowerCase().trim();
-      if (!q) return;
-      currentViewState = { type: 'search', q };
-      backToCatalog();
-      document.getElementById('collectionHeading').innerText = `Showing results for: "${q}"`;
-      const matched = productsDB.filter(p => 
-        p.title.toLowerCase().includes(q) || 
+    function filterProductsBySearch(q) {
+      return productsDB.filter(p =>
+        p.title.toLowerCase().includes(q) ||
         p.category.toLowerCase().includes(q) ||
         p.sub.toLowerCase().includes(q)
       );
+    }
+
+    async function doSearch() {
+      const raw = document.getElementById('searchInput').value.trim();
+      if (!raw) return;
+      currentViewState = { type: 'search', q: raw };
+      backToCatalog();
+      document.getElementById('collectionHeading').innerText = `Showing results for: "${raw}"`;
+
+      let matched = filterProductsBySearch(raw.toLowerCase());
+
+      // Nothing matched directly — the query may be in another language
+      // (or badly misspelled). Ask Gemini to translate it and retry once,
+      // rather than translating on every keystroke.
+      if (matched.length === 0 && fns) {
+        const searchBtn = document.querySelector('.search-box > button:last-child');
+        const originalBtnText = searchBtn ? searchBtn.innerText : null;
+        if (searchBtn) searchBtn.innerText = '…';
+
+        try {
+          const translateSearchQuery = fns.httpsCallable('translateSearchQuery');
+          const res = await translateSearchQuery({ query: raw });
+          const translated = (res.data?.translatedQuery || '').trim();
+
+          if (translated && translated.toLowerCase() !== raw.toLowerCase()) {
+            const translatedMatches = filterProductsBySearch(translated.toLowerCase());
+            if (translatedMatches.length) {
+              matched = translatedMatches;
+              document.getElementById('collectionHeading').innerText = `Showing results for: "${raw}" (${translated})`;
+            }
+          }
+        } catch (err) {
+          console.warn('Search translation failed:', err.message);
+          // Fall through silently — the user still sees the (empty) direct-match results.
+        } finally {
+          if (searchBtn && originalBtnText !== null) searchBtn.innerText = originalBtnText;
+        }
+      }
+
       renderProducts(matched);
+    }
+
+    // ===================================================================
+    // VOICE SEARCH
+    // ===================================================================
+    let voiceRecognition = null;
+    let voiceListening = false;
+
+    function getSpeechRecognitionCtor() {
+      return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+    }
+
+    (function initVoiceSearch() {
+      const btn = document.getElementById('voiceSearchBtn');
+      const langSelect = document.getElementById('voiceSearchLang');
+      if (!getSpeechRecognitionCtor()) {
+        // Not supported (e.g. Firefox, Safari on some versions) — hide the
+        // mic and language picker rather than show a button that can't work.
+        if (btn) btn.style.display = 'none';
+        if (langSelect) langSelect.style.display = 'none';
+        return;
+      }
+      const savedLang = localStorage.getItem('voiceSearchLang');
+      if (savedLang && langSelect) langSelect.value = savedLang;
+      if (langSelect) {
+        langSelect.addEventListener('change', () => {
+          localStorage.setItem('voiceSearchLang', langSelect.value);
+        });
+      }
+    })();
+
+    function toggleVoiceSearch() {
+      const Ctor = getSpeechRecognitionCtor();
+      if (!Ctor) return;
+
+      if (voiceListening && voiceRecognition) {
+        voiceRecognition.stop();
+        return;
+      }
+
+      const lang = document.getElementById('voiceSearchLang')?.value || 'en-US';
+      voiceRecognition = new Ctor();
+      voiceRecognition.lang = lang;
+      voiceRecognition.interimResults = false;
+      voiceRecognition.maxAlternatives = 1;
+
+      const btn = document.getElementById('voiceSearchBtn');
+
+      voiceRecognition.onstart = () => {
+        voiceListening = true;
+        if (btn) btn.classList.add('listening');
+      };
+      voiceRecognition.onerror = (event) => {
+        console.warn('Voice search error:', event.error);
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          showNotification('Voice Search', "Microphone access is blocked — allow it in your browser's site settings to use voice search.");
+        } else if (event.error === 'no-speech') {
+          showNotification('Voice Search', "Didn't catch that — try again.");
+        }
+      };
+      voiceRecognition.onend = () => {
+        voiceListening = false;
+        if (btn) btn.classList.remove('listening');
+      };
+      voiceRecognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('searchInput').value = transcript;
+        doSearch();
+      };
+
+      try {
+        voiceRecognition.start();
+      } catch (err) {
+        console.error('Could not start voice recognition:', err);
+      }
     }
 
     function addToCart(productId) {
