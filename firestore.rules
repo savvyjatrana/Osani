@@ -1,64 +1,268 @@
 rules_version = '2';
+
 service cloud.firestore {
+
   match /databases/{database}/documents {
 
-    function signedIn() { return request.auth != null; }
-    function userRole() {
-      return signedIn() ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role : null;
+    function signedIn() {
+      return request.auth != null;
     }
-    function isSeller() { return signedIn() && userRole() == 'seller'; }
-    function isCA() { return signedIn() && userRole() == 'ca'; }
 
+    function userRole() {
+      return signedIn()
+        ? get(
+            /databases/$(database)/documents/users/$(request.auth.uid)
+          ).data.role
+        : null;
+    }
+
+    function isSeller() {
+      return signedIn() && userRole() == 'seller';
+    }
+
+    function isCA() {
+      return signedIn() && userRole() == 'ca';
+    }
+
+    /*
+     * PRODUCTS
+     */
     match /products/{productId} {
+
       allow read: if true;
+
       allow write: if signedIn();
     }
 
+    /*
+     * ORDERS
+     */
     match /orders/{orderId} {
+
       allow create: if true;
+
       allow get: if true;
+
       allow list: if signedIn();
+
       allow update, delete: if signedIn();
     }
 
-    // Business Compliance Hub
+    /*
+     * USERS
+     *
+     * Seller accounts can create their own seller profile.
+     *
+     * CA accounts are NOT allowed to create a users document
+     * themselves. This prevents a person from registering and
+     * immediately making themselves a verified CA.
+     */
     match /users/{userId} {
-      allow create: if signedIn() && request.auth.uid == userId
-                    && request.resource.data.role == 'seller';
-      allow read: if signedIn() && request.auth.uid == userId;
-      allow update: if signedIn() && request.auth.uid == userId
-                    && request.resource.data.role == resource.data.role;
+
+      allow create:
+        if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.role == 'seller';
+
+      allow read:
+        if signedIn()
+        && request.auth.uid == userId;
+
+      allow update:
+        if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.role == resource.data.role
+        && (
+          resource.data.role == 'seller'
+          ||
+          (
+            resource.data.role == 'ca'
+            && request.resource.data.verified == resource.data.verified
+          )
+        );
+
       allow delete: if false;
     }
 
-    // CA directory. CA profiles should be provisioned/verified by OSANI admin.
+    /*
+     * CA REGISTRATION APPLICATIONS
+     *
+     * A person can submit their own CA application.
+     * They cannot mark themselves verified.
+     *
+     * OSANI admin/backend should review these applications
+     * and create/activate the CA users/caProfiles records.
+     */
+    match /caApplications/{applicationId} {
+
+      allow create:
+        if signedIn()
+        && request.auth.uid == applicationId
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.role == 'ca'
+        && request.resource.data.status == 'pending_verification'
+        && request.resource.data.verified == false;
+
+      allow read:
+        if signedIn()
+        && request.auth.uid == applicationId;
+
+      allow update:
+        if signedIn()
+        && request.auth.uid == applicationId
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.role == 'ca'
+        && request.resource.data.verified == false
+        && request.resource.data.status == 'pending_verification';
+
+      allow delete: if false;
+    }
+
+    /*
+     * VERIFIED CA DIRECTORY
+     *
+     * Sellers/public authenticated users can read verified CA profiles.
+     * CA can update their own profile, but cannot make themselves verified.
+     */
     match /caProfiles/{caId} {
-      allow read: if (resource.data.verified == true) || (signedIn() && request.auth.uid == caId);
-      allow create, update: if isCA() && request.auth.uid == caId;
+
+      allow read:
+        if resource.data.verified == true
+        || (
+          signedIn()
+          && request.auth.uid == caId
+        );
+
+      allow create:
+        if isCA()
+        && request.auth.uid == caId
+        && request.resource.data.verified == false;
+
+      allow update:
+        if isCA()
+        && request.auth.uid == caId
+        && request.resource.data.verified == resource.data.verified;
+
       allow delete: if false;
     }
 
+    /*
+     * COMPLIANCE REQUESTS
+     */
     match /complianceRequests/{requestId} {
-      allow create: if isSeller() && request.resource.data.sellerId == request.auth.uid;
-      allow read: if signedIn() && (resource.data.sellerId == request.auth.uid || resource.data.caId == request.auth.uid || (isCA() && resource.data.status == 'awaiting CA'));
-      allow update: if signedIn() && request.resource.data.sellerId == resource.data.sellerId && (resource.data.sellerId == request.auth.uid || resource.data.caId == request.auth.uid || (isCA() && resource.data.status == 'awaiting CA'));
+
+      /*
+       * Seller creates a request for themselves.
+       */
+      allow create:
+        if isSeller()
+        && request.resource.data.sellerId == request.auth.uid;
+
+      /*
+       * Seller sees own requests.
+       * Assigned CA sees their requests.
+       * Verified CA can see unassigned requests.
+       */
+      allow read:
+        if signedIn()
+        && (
+          resource.data.sellerId == request.auth.uid
+          ||
+          resource.data.caId == request.auth.uid
+          ||
+          (
+            isCA()
+            && resource.data.status == 'awaiting CA'
+          )
+        );
+
+      /*
+       * Seller can update their own request.
+       * Assigned CA can update their request.
+       * CA can accept an unassigned request.
+       */
+      allow update:
+        if signedIn()
+        && request.resource.data.sellerId == resource.data.sellerId
+        && (
+          resource.data.sellerId == request.auth.uid
+          ||
+          resource.data.caId == request.auth.uid
+          ||
+          (
+            isCA()
+            && resource.data.status == 'awaiting CA'
+            && request.resource.data.caId == request.auth.uid
+          )
+        );
+
       allow delete: if false;
     }
 
+    /*
+     * COMPLIANCE TASKS
+     */
     match /complianceTasks/{taskId} {
-      allow read: if signedIn() && (resource.data.sellerId == request.auth.uid || resource.data.assignedTo == request.auth.uid);
-      allow create: if isCA() && request.resource.data.assignedTo == request.auth.uid;
-      allow update: if isCA() && resource.data.assignedTo == request.auth.uid;
+
+      allow read:
+        if signedIn()
+        && (
+          resource.data.sellerId == request.auth.uid
+          ||
+          resource.data.assignedTo == request.auth.uid
+        );
+
+      allow create:
+        if isCA()
+        && request.resource.data.assignedTo == request.auth.uid;
+
+      allow update:
+        if isCA()
+        && resource.data.assignedTo == request.auth.uid;
+
       allow delete: if false;
     }
 
+    /*
+     * ACTIVITY LOG
+     */
     match /activities/{activityId} {
-      allow read: if signedIn() && (resource.data.actorId == request.auth.uid || (resource.data.requestId != null && (get(/databases/$(database)/documents/complianceRequests/$(resource.data.requestId)).data.sellerId == request.auth.uid || get(/databases/$(database)/documents/complianceRequests/$(resource.data.requestId)).data.caId == request.auth.uid)));
-      allow create: if signedIn() && request.resource.data.actorId == request.auth.uid;
+
+      allow read:
+        if signedIn()
+        && (
+          resource.data.actorId == request.auth.uid
+          ||
+          (
+            resource.data.requestId != null
+            &&
+            (
+              get(
+                /databases/$(database)/documents/complianceRequests/$(resource.data.requestId)
+              ).data.sellerId == request.auth.uid
+              ||
+              get(
+                /databases/$(database)/documents/complianceRequests/$(resource.data.requestId)
+              ).data.caId == request.auth.uid
+            )
+          )
+        );
+
+      allow create:
+        if signedIn()
+        && request.resource.data.actorId == request.auth.uid;
+
       allow update, delete: if false;
     }
 
+    /*
+     * PRINTROVE CONFIG
+     *
+     * Credentials/tokens must never be readable from the client.
+     */
     match /config/printrove {
+
       allow read, write: if false;
     }
   }
