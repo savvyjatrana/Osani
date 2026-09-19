@@ -25,7 +25,8 @@
  *   firebase functions:secrets:set PRINTROVE_EMAIL
  *   firebase functions:secrets:set PRINTROVE_PASSWORD
  *   firebase functions:secrets:set MSG91_AUTHKEY
- *   firebase functions:secrets:set GEMINI_API_KEY   (AI try-on + multilingual search — see tryonClient.js / translateClient.js)
+ *   firebase functions:secrets:set GEMINI_API_KEY   (multilingual search — see translateClient.js)
+ *   GENLOOK_API_KEY   (AI virtual try-on — see tryonClient.js)
  * Optional (order notifications — see notifyClient.js for what each does),
  * set as env vars however you manage functions/ config (e.g. a .env file):
  *   MSG91_SMS_FLOW_ID, MSG91_SMS_SENDER_ID,
@@ -49,6 +50,7 @@ const PRINTROVE_EMAIL = defineSecret("PRINTROVE_EMAIL");
 const PRINTROVE_PASSWORD = defineSecret("PRINTROVE_PASSWORD");
 const MSG91_AUTHKEY = defineSecret("MSG91_AUTHKEY");
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
+const GENLOOK_API_KEY = defineSecret("GENLOOK_API_KEY");
 
 // Fill these in (env vars, or a functions/.env file) once you've set up
 // your MSG91 SMS flow and/or WhatsApp template. Leaving a field blank just
@@ -226,24 +228,15 @@ exports.retryPushOrder = onCall(
  * Response: { imageBase64: string, mimeType: string }
  */
 exports.generateTryOnImage = onCall(
-  { secrets: [GEMINI_API_KEY], timeoutSeconds: 60, memory: "512MiB" },
+  { secrets: [GENLOOK_API_KEY], timeoutSeconds: 120, memory: "512MiB" },
   async (request) => {
     const { productId, userPhotoBase64, userPhotoMimeType } = request.data || {};
     if (!productId || !userPhotoBase64) {
       throw new HttpsError("invalid-argument", "productId and userPhotoBase64 are required");
     }
 
-    // Everything below is wrapped so that ANY failure — a bad Firestore
-    // lookup, a network error, an unexpected shape from Gemini — comes back
-    // to the client as a real, readable message instead of Firebase's
-    // generic "internal" (which is what an *uncaught* throw turns into).
     try {
-      let productSnap;
-      try {
-        productSnap = await admin.firestore().collection("products").doc(productId).get();
-      } catch (err) {
-        throw new HttpsError("internal", `Could not read product ${productId} from Firestore: ${err.message}`);
-      }
+      const productSnap = await admin.firestore().collection("products").doc(productId).get();
       if (!productSnap.exists) {
         throw new HttpsError("not-found", `No product found with id "${productId}".`);
       }
@@ -253,32 +246,25 @@ exports.generateTryOnImage = onCall(
         throw new HttpsError("failed-precondition", "This product has no image to try on.");
       }
 
-      // product.img is a URL (Storage or external) — fetch and base64-encode
-      // it so it can go in the same request as the customer's photo.
-      let productImageBase64, productImageMimeType;
+      // Genlook accepts a public product image URL directly. This is better
+      // than downloading the product image into the Cloud Function first.
       try {
-        const imgRes = await axios.get(product.img, { responseType: "arraybuffer", timeout: 15000 });
-        productImageBase64 = Buffer.from(imgRes.data).toString("base64");
-        productImageMimeType = imgRes.headers["content-type"] || "image/jpeg";
-      } catch (err) {
-        throw new HttpsError("internal", `Could not fetch the product image (${product.img}): ${err.message}`);
-      }
-
-      try {
-        return await tryon.generateTryOn(GEMINI_API_KEY.value(), {
+        return await tryon.generateTryOn(GENLOOK_API_KEY.value(), {
           userPhotoBase64,
           userPhotoMimeType: userPhotoMimeType || "image/jpeg",
-          productImageBase64,
-          productImageMimeType,
+          productImageUrl: product.img,
           productTitle: product.title,
+          productId,
         });
       } catch (err) {
-        throw new HttpsError("internal", `Gemini try-on generation failed: ${err.response?.data ? JSON.stringify(err.response.data) : err.message}`);
+        console.error(`Genlook try-on generation failed for ${productId}:`, err);
+        throw new HttpsError(
+          "internal",
+          `Virtual try-on failed: ${err.message || "Unknown Genlook error"}`
+        );
       }
     } catch (err) {
-      // Log the full detail server-side either way, then re-throw so the
-      // client gets the specific HttpsError message set above.
-      console.error(`Try-on failed for product ${productId}:`, err.message);
+      console.error(`Try-on failed for product ${productId}:`, err);
       if (err instanceof HttpsError) throw err;
       throw new HttpsError("internal", `Unexpected try-on error: ${err.message}`);
     }

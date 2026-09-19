@@ -1716,12 +1716,12 @@
             <div style="font-size: 11px; color: #94969f; margin-top: 2px;">JPG or PNG, face &amp; upper body visible</div>
           </div>
           <img id="tryOnPreviewImg" style="display:none; max-width: 100%; max-height: 220px; border-radius: 8px; margin-top: 12px;">
-          <button class="place-order-btn" id="tryOnGenerateBtn" style="display:none; margin-top: 14px;" onclick="submitTryOn()">Generate Try-On</button>
+          <button class="place-order-btn" id="tryOnGenerateBtn" style="display:none; margin-top: 14px;" onclick="submitTryOn()">✨ See It On Me</button>
         </div>
 
         <div id="tryOnLoadingStage" style="display:none; padding: 30px 0;">
-          <div style="font-size: 13px; color: #535766;">Generating your try-on image…</div>
-          <div style="font-size: 11px; color: #94969f; margin-top: 6px;">This can take up to 30 seconds.</div>
+          <div style="font-size: 13px; color: #535766;">✨ Putting the product on you…</div>
+          <div style="font-size: 11px; color: #94969f; margin-top: 6px;">AI fitting room is creating your on-body preview. Usually about 10 seconds.</div>
         </div>
 
         <div id="tryOnResultStage" style="display:none;">
@@ -2736,12 +2736,11 @@
           userPhotoMimeType: tryOnSelectedFile.type || 'image/jpeg',
         });
 
-        const { imageBase64, mimeType } = res.data || {};
-        if (!imageBase64) throw new Error('No image returned.');
+        const { resultImageUrl } = res.data || {};
+        if (!resultImageUrl) throw new Error('No try-on image returned.');
 
-        const dataUrl = `data:${mimeType || 'image/png'};base64,${imageBase64}`;
-        document.getElementById('tryOnResultImg').src = dataUrl;
-        document.getElementById('tryOnDownloadLink').href = dataUrl;
+        document.getElementById('tryOnResultImg').src = resultImageUrl;
+        document.getElementById('tryOnDownloadLink').href = resultImageUrl;
         document.getElementById('tryOnLoadingStage').style.display = 'none';
         document.getElementById('tryOnResultStage').style.display = 'block';
       } catch (err) {
