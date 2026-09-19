@@ -203,3 +203,22 @@ and `status` defensively to cover the two likely response shapes. **Log one
 real response** (temporarily `console.log(JSON.stringify(remote))` inside
 `syncPrintroveTracking`) and tighten the field paths once you see the actual
 shape.
+
+## 8. OSANI Business Compliance Hub (CA + Seller)
+
+A new `compliance.html` portal adds two role-based interfaces: **Seller / Business** and **Chartered Accountant**. The storefront now exposes a **Business Hub** action that opens the portal. The portal uses the same Firebase project as the store and provides: 
+
+- Seller account creation/login and business profile.
+- CA directory with verified CA profiles.
+- Service requests for GST registration/returns, company/LLP registration, startup/DPIIT compliance, MSME/Udyam, ITR, TDS/payroll, bookkeeping, trademark/IP assistance, licences and e-commerce compliance.
+- Request status, assigned CA, priority, activity history and document checklist.
+- CA dashboard for client requests, active clients, tasks, request acceptance and CA profile.
+- Separate role-based Firestore rules for users, CA profiles, compliance requests, tasks and activities.
+
+### CA onboarding
+
+For security, the CA role is not self-created from the public signup form. Create the Firebase Authentication account and the corresponding `users/{uid}` document with `role: "ca"` and `verified: true`, plus a `caProfiles/{uid}` document. After that the CA can log in through the Chartered Accountant tab.
+
+### Important next step for actual document upload
+
+The first version provides the **document checklist/status UI**, but does not upload sensitive business documents to storage. For production use, connect Firebase Storage with per-seller/per-request access rules and add audit logging before collecting PAN, Aadhaar, bank statements or incorporation documents.

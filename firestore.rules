@@ -2,31 +2,62 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Anyone can read the product catalog (needed for the storefront).
-    // Only signed-in admins (Firebase Auth users you created for admin.html)
-    // can create/update/delete products.
+    function signedIn() { return request.auth != null; }
+    function userRole() {
+      return signedIn() ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role : null;
+    }
+    function isSeller() { return signedIn() && userRole() == 'seller'; }
+    function isCA() { return signedIn() && userRole() == 'ca'; }
+
     match /products/{productId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if signedIn();
     }
 
-    // Orders: any visitor (including guests) can CREATE an order — this is
-    // what lets checkout work without forcing login. Anyone who has the
-    // specific Order ID (shown once on the confirmation screen, acting like
-    // a confirmation number) can look up THAT single order for tracking.
-    // Nobody but a signed-in admin can LIST/QUERY the whole orders
-    // collection, or edit/delete an order directly from the client — status
-    // updates after creation should only happen via the Cloud Functions,
-    // which use the Admin SDK and bypass these rules entirely.
     match /orders/{orderId} {
       allow create: if true;
       allow get: if true;
-      allow list: if request.auth != null;
-      allow update, delete: if request.auth != null;
+      allow list: if signedIn();
+      allow update, delete: if signedIn();
     }
 
-    // Printrove token cache — server-side (Cloud Functions) only.
-    // No client should ever read or write this directly.
+    // Business Compliance Hub
+    match /users/{userId} {
+      allow create: if signedIn() && request.auth.uid == userId
+                    && request.resource.data.role == 'seller';
+      allow read: if signedIn() && request.auth.uid == userId;
+      allow update: if signedIn() && request.auth.uid == userId
+                    && request.resource.data.role == resource.data.role;
+      allow delete: if false;
+    }
+
+    // CA directory. CA profiles should be provisioned/verified by OSANI admin.
+    match /caProfiles/{caId} {
+      allow read: if (resource.data.verified == true) || (signedIn() && request.auth.uid == caId);
+      allow create, update: if isCA() && request.auth.uid == caId;
+      allow delete: if false;
+    }
+
+    match /complianceRequests/{requestId} {
+      allow create: if isSeller() && request.resource.data.sellerId == request.auth.uid;
+      allow read: if signedIn() && (resource.data.sellerId == request.auth.uid || resource.data.caId == request.auth.uid || (isCA() && resource.data.status == 'awaiting CA'));
+      allow update: if signedIn() && request.resource.data.sellerId == resource.data.sellerId && (resource.data.sellerId == request.auth.uid || resource.data.caId == request.auth.uid || (isCA() && resource.data.status == 'awaiting CA'));
+      allow delete: if false;
+    }
+
+    match /complianceTasks/{taskId} {
+      allow read: if signedIn() && (resource.data.sellerId == request.auth.uid || resource.data.assignedTo == request.auth.uid);
+      allow create: if isCA() && request.resource.data.assignedTo == request.auth.uid;
+      allow update: if isCA() && resource.data.assignedTo == request.auth.uid;
+      allow delete: if false;
+    }
+
+    match /activities/{activityId} {
+      allow read: if signedIn() && (resource.data.actorId == request.auth.uid || (resource.data.requestId != null && (get(/databases/$(database)/documents/complianceRequests/$(resource.data.requestId)).data.sellerId == request.auth.uid || get(/databases/$(database)/documents/complianceRequests/$(resource.data.requestId)).data.caId == request.auth.uid)));
+      allow create: if signedIn() && request.resource.data.actorId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
     match /config/printrove {
       allow read, write: if false;
     }

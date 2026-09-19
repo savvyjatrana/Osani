@@ -1,0 +1,23 @@
+OSANI Business Hub package
+
+Upload/replace at website root:
+- index.html
+- admin.html
+- compliance.html
+- firestore.rules
+- logo.png
+
+Firebase Functions folder:
+- functions/index.js
+- functions/package.json
+- functions/notifyClient.js
+- functions/printroveClient.js
+- functions/translateClient.js
+- functions/tryonClient.js
+
+Notes:
+- compliance.html is the new Seller + Chartered Accountant Business Hub.
+- index.html provides the storefront entry point to the Business Hub.
+- firestore.rules contains the Firestore security rules supplied for the project.
+- Existing Firebase/Printrove/MSG91/Gemini configuration and secrets are not included.
+- Do not expose API keys, passwords, or Firebase service-account credentials in the public website files.
