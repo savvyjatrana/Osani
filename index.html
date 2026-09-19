@@ -168,7 +168,10 @@
       color: #6b6f76;
       padding: 0 2px;
       outline: none;
-      max-width: 54px;
+      max-width: 104px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
     }
 
     .voice-search-btn {
@@ -1435,20 +1438,33 @@
     <div class="search-box">
       <input type="text" id="searchInput" placeholder="Search across all departments..." onkeyup="if(event.key==='Enter') doSearch()">
       <select id="voiceSearchLang" class="search-lang-select" title="Voice search language">
-        <option value="en-US">EN</option>
-        <option value="hi-IN">HI</option>
-        <option value="ar-SA">AR</option>
-        <option value="fr-FR">FR</option>
-        <option value="es-ES">ES</option>
-        <option value="de-DE">DE</option>
-        <option value="pt-BR">PT</option>
-        <option value="bn-IN">BN</option>
-        <option value="ta-IN">TA</option>
-        <option value="te-IN">TE</option>
-        <option value="ur-IN">UR</option>
-        <option value="zh-CN">ZH</option>
-        <option value="ja-JP">JA</option>
-        <option value="ru-RU">RU</option>
+        <optgroup label="English">
+          <option value="en-IN">EN - English</option>
+        </optgroup>
+        <optgroup label="Indian Languages">
+          <option value="hi-IN">HI - Hindi</option>
+          <option value="bn-IN">BN - Bengali</option>
+          <option value="gu-IN">GU - Gujarati</option>
+          <option value="kn-IN">KN - Kannada</option>
+          <option value="ml-IN">ML - Malayalam</option>
+          <option value="mr-IN">MR - Marathi</option>
+          <option value="pa-Guru-IN">PA - Punjabi</option>
+          <option value="ta-IN">TA - Tamil</option>
+          <option value="te-IN">TE - Telugu</option>
+          <option value="ur-IN">UR - Urdu</option>
+          <option value="as-IN">AS - Assamese</option>
+          <option value="or-IN">OR - Odia</option>
+          <option value="brx-IN">BRX - Bodo</option>
+          <option value="doi-IN">DOI - Dogri</option>
+          <option value="ks-IN">KS - Kashmiri</option>
+          <option value="kok-IN">KOK - Konkani</option>
+          <option value="mai-IN">MAI - Maithili</option>
+          <option value="mni-IN">MNI - Manipuri</option>
+          <option value="ne-NP">NE - Nepali</option>
+          <option value="sa-IN">SA - Sanskrit</option>
+          <option value="sat-IN">SAT - Santali</option>
+          <option value="sd-IN">SD - Sindhi</option>
+        </optgroup>
       </select>
       <button type="button" id="voiceSearchBtn" class="voice-search-btn" onclick="toggleVoiceSearch()" title="Search by voice">🎙️</button>
       <button type="button" onclick="doSearch()">🔍</button>
@@ -2890,7 +2906,7 @@
         return;
       }
 
-      const lang = document.getElementById('voiceSearchLang')?.value || 'en-US';
+      const lang = document.getElementById('voiceSearchLang')?.value || 'en-IN';
       voiceRecognition = new Ctor();
       voiceRecognition.lang = lang;
       voiceRecognition.interimResults = false;
@@ -2908,6 +2924,8 @@
           showNotification('Voice Search', "Microphone access is blocked — allow it in your browser's site settings to use voice search.");
         } else if (event.error === 'no-speech') {
           showNotification('Voice Search', "Didn't catch that — try again.");
+        } else if (event.error === 'language-not-supported') {
+          showNotification('Voice Search', "Voice input isn't available for this language in your browser yet — you can still type your search in it and we'll translate it.");
         }
       };
       voiceRecognition.onend = () => {
