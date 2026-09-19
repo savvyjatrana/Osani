@@ -25,7 +25,7 @@
  *   firebase functions:secrets:set PRINTROVE_EMAIL
  *   firebase functions:secrets:set PRINTROVE_PASSWORD
  *   firebase functions:secrets:set MSG91_AUTHKEY
- *   firebase functions:secrets:set GEMINI_API_KEY   (AI try-on — see tryonClient.js)
+ *   firebase functions:secrets:set GEMINI_API_KEY   (AI try-on + multilingual search — see tryonClient.js / translateClient.js)
  * Optional (order notifications — see notifyClient.js for what each does),
  * set as env vars however you manage functions/ config (e.g. a .env file):
  *   MSG91_SMS_FLOW_ID, MSG91_SMS_SENDER_ID,
@@ -41,6 +41,7 @@ const axios = require("axios");
 const printrove = require("./printroveClient");
 const notify = require("./notifyClient");
 const tryon = require("./tryonClient");
+const translate = require("./translateClient");
 
 admin.initializeApp();
 
@@ -232,37 +233,81 @@ exports.generateTryOnImage = onCall(
       throw new HttpsError("invalid-argument", "productId and userPhotoBase64 are required");
     }
 
-    const productSnap = await admin.firestore().collection("products").doc(productId).get();
-    if (!productSnap.exists) throw new HttpsError("not-found", "Product not found");
-
-    const product = productSnap.data();
-    if (!product.img) {
-      throw new HttpsError("failed-precondition", "This product has no image to try on.");
-    }
-
-    // product.img is a URL (Storage or external) — fetch and base64-encode
-    // it so it can go in the same request as the customer's photo.
-    let productImageBase64, productImageMimeType;
+    // Everything below is wrapped so that ANY failure — a bad Firestore
+    // lookup, a network error, an unexpected shape from Gemini — comes back
+    // to the client as a real, readable message instead of Firebase's
+    // generic "internal" (which is what an *uncaught* throw turns into).
     try {
-      const imgRes = await axios.get(product.img, { responseType: "arraybuffer", timeout: 15000 });
-      productImageBase64 = Buffer.from(imgRes.data).toString("base64");
-      productImageMimeType = imgRes.headers["content-type"] || "image/jpeg";
+      let productSnap;
+      try {
+        productSnap = await admin.firestore().collection("products").doc(productId).get();
+      } catch (err) {
+        throw new HttpsError("internal", `Could not read product ${productId} from Firestore: ${err.message}`);
+      }
+      if (!productSnap.exists) {
+        throw new HttpsError("not-found", `No product found with id "${productId}".`);
+      }
+
+      const product = productSnap.data();
+      if (!product.img) {
+        throw new HttpsError("failed-precondition", "This product has no image to try on.");
+      }
+
+      // product.img is a URL (Storage or external) — fetch and base64-encode
+      // it so it can go in the same request as the customer's photo.
+      let productImageBase64, productImageMimeType;
+      try {
+        const imgRes = await axios.get(product.img, { responseType: "arraybuffer", timeout: 15000 });
+        productImageBase64 = Buffer.from(imgRes.data).toString("base64");
+        productImageMimeType = imgRes.headers["content-type"] || "image/jpeg";
+      } catch (err) {
+        throw new HttpsError("internal", `Could not fetch the product image (${product.img}): ${err.message}`);
+      }
+
+      try {
+        return await tryon.generateTryOn(GEMINI_API_KEY.value(), {
+          userPhotoBase64,
+          userPhotoMimeType: userPhotoMimeType || "image/jpeg",
+          productImageBase64,
+          productImageMimeType,
+          productTitle: product.title,
+        });
+      } catch (err) {
+        throw new HttpsError("internal", `Gemini try-on generation failed: ${err.response?.data ? JSON.stringify(err.response.data) : err.message}`);
+      }
     } catch (err) {
-      console.error(`Try-on: failed to fetch product image for ${productId}:`, err.message);
-      throw new HttpsError("internal", "Could not load the product image.");
+      // Log the full detail server-side either way, then re-throw so the
+      // client gets the specific HttpsError message set above.
+      console.error(`Try-on failed for product ${productId}:`, err.message);
+      if (err instanceof HttpsError) throw err;
+      throw new HttpsError("internal", `Unexpected try-on error: ${err.message}`);
     }
+  }
+);
+
+/**
+ * Callable function: powers multilingual search on the storefront. The
+ * client-side search (index.html's doSearch) is a plain substring match
+ * against English product text, so it calls this ONLY as a fallback when
+ * a query typed in another language (or with heavy typos) returns zero
+ * results — this translates it to English so the same substring match
+ * can retry and actually find something.
+ *
+ * Request:  { query: string }
+ * Response: { translatedQuery: string }
+ */
+exports.translateSearchQuery = onCall(
+  { secrets: [GEMINI_API_KEY], timeoutSeconds: 20 },
+  async (request) => {
+    const query = (request.data?.query || "").trim();
+    if (!query) throw new HttpsError("invalid-argument", "query is required");
 
     try {
-      return await tryon.generateTryOn(GEMINI_API_KEY.value(), {
-        userPhotoBase64,
-        userPhotoMimeType: userPhotoMimeType || "image/jpeg",
-        productImageBase64,
-        productImageMimeType,
-        productTitle: product.title,
-      });
+      const translatedQuery = await translate.translateToEnglish(GEMINI_API_KEY.value(), query);
+      return { translatedQuery };
     } catch (err) {
-      console.error(`Try-on generation failed for product ${productId}:`, err.message);
-      throw new HttpsError("internal", err.message || "Try-on generation failed.");
+      console.error(`Search translation failed for "${query}":`, err.message);
+      throw new HttpsError("internal", `Search translation failed: ${err.message}`);
     }
   }
 );
