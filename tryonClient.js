@@ -8,7 +8,20 @@
  *   1) POST /tryon/v1/images/upload -> imageId
  *   2) POST /tryon/v1/try-on -> generationId
  *   3) GET  /tryon/v1/generations/:id until COMPLETED/FAILED
+ *
+ * NOTE: this uses axios + the "form-data" package instead of the
+ * platform's built-in fetch/FormData/Blob. Cloud Functions' Node runtime
+ * does expose fetch/FormData globally, but that undici-based
+ * implementation has known edge cases generating multipart bodies that
+ * some servers reject in ways that surface only as an opaque crash (the
+ * Firebase callable client then just shows "internal" with no detail).
+ * axios + form-data is the same battle-tested combo already used by
+ * printroveClient.js and notifyClient.js, so this keeps behavior
+ * consistent and errors properly surfaced.
  */
+
+const axios = require("axios");
+const FormData = require("form-data");
 
 const BASE_URL = "https://api.genlook.app/tryon/v1";
 
@@ -16,33 +29,36 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function readResponse(response) {
-  const text = await response.text();
-  let data = {};
-
-  try {
-    data = text ? JSON.parse(text) : {};
-  } catch (_) {
-    data = { message: text || "Unknown Genlook response" };
+/**
+ * Normalizes an axios error (or any thrown error) into a plain Error with
+ * .code / .status / .details / .requestId, mirroring what the old
+ * fetch-based readResponse() attached — so index.js's error handling
+ * doesn't need to change.
+ */
+function normalizeAxiosError(err, fallbackMessage) {
+  if (!err.response) {
+    // Network-level failure (DNS, timeout, connection reset, etc.) — no
+    // response body to read.
+    const error = new Error(err.message || fallbackMessage);
+    error.code = err.code || "NETWORK_ERROR";
+    return error;
   }
 
-  if (!response.ok) {
-    const error = new Error(
-      data.message || `Genlook API returned HTTP ${response.status}`
-    );
-    error.code = data.code || `HTTP_${response.status}`;
-    error.status = data.status || response.status;
-    error.details = data.details || null;
-    error.requestId = data.requestId || null;
-    throw error;
-  }
+  const data = err.response.data || {};
+  const message =
+    (typeof data === "string" ? data : data.message) ||
+    fallbackMessage ||
+    `Genlook API returned HTTP ${err.response.status}`;
 
-  return data;
+  const error = new Error(message);
+  error.code = data.code || `HTTP_${err.response.status}`;
+  error.status = data.status || err.response.status;
+  error.details = data.details || (typeof data === "object" ? data : null);
+  error.requestId = data.requestId || null;
+  return error;
 }
 
 async function uploadCustomerPhoto(apiKey, photoBuffer, mimeType) {
-  const form = new FormData();
-
   const safeMime = mimeType || "image/jpeg";
   const extension =
     safeMime === "image/png"
@@ -53,23 +69,25 @@ async function uploadCustomerPhoto(apiKey, photoBuffer, mimeType) {
           ? "heic"
           : "jpg";
 
-  form.append(
-    "file",
-    new Blob([photoBuffer], { type: safeMime }),
-    `osani-customer.${extension}`
-  );
-
+  const form = new FormData();
+  form.append("file", photoBuffer, {
+    filename: `osani-customer.${extension}`,
+    contentType: safeMime,
+  });
   // Keep the original framing. Genlook's documentation recommends the
   // upload endpoint when you want control over cropping.
   form.append("crop", "false");
 
-  const response = await fetch(`${BASE_URL}/images/upload`, {
-    method: "POST",
-    headers: { "x-api-key": apiKey },
-    body: form,
-  });
-
-  return readResponse(response);
+  try {
+    const res = await axios.post(`${BASE_URL}/images/upload`, form, {
+      headers: { "x-api-key": apiKey, ...form.getHeaders() },
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
+    });
+    return res.data;
+  } catch (err) {
+    throw normalizeAxiosError(err, "Genlook photo upload failed.");
+  }
 }
 
 async function createTryOn(apiKey, {
@@ -122,31 +140,31 @@ async function createTryOn(apiKey, {
     },
   };
 
-  const response = await fetch(`${BASE_URL}/try-on`, {
-    method: "POST",
-    headers: {
-      "x-api-key": apiKey,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  return readResponse(response);
+  try {
+    const res = await axios.post(`${BASE_URL}/try-on`, payload, {
+      headers: { "x-api-key": apiKey, "Content-Type": "application/json" },
+    });
+    return res.data;
+  } catch (err) {
+    throw normalizeAxiosError(err, "Genlook try-on request failed.");
+  }
 }
 
 async function waitForGeneration(apiKey, generationId) {
-  // Genlook documents polling every 2 seconds. 90 attempts gives us a
-  // three-minute ceiling while the Firebase callable also has a 180s limit.
+  // Genlook documents polling every 2 seconds. 85 attempts gives us a
+  // ~170s ceiling while the Firebase callable has a 180s limit.
   for (let attempt = 0; attempt < 85; attempt += 1) {
-    const response = await fetch(
-      `${BASE_URL}/generations/${encodeURIComponent(generationId)}`,
-      {
-        method: "GET",
-        headers: { "x-api-key": apiKey },
-      }
-    );
+    let data;
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/generations/${encodeURIComponent(generationId)}`,
+        { headers: { "x-api-key": apiKey } }
+      );
+      data = res.data;
+    } catch (err) {
+      throw normalizeAxiosError(err, "Genlook generation status check failed.");
+    }
 
-    const data = await readResponse(response);
     const status = String(data.status || "").toUpperCase();
 
     console.log(
@@ -193,7 +211,9 @@ async function generateTryOn(apiKey, {
   productId,
 }) {
   if (!apiKey) {
-    throw new Error("GENLOOK_API_KEY is not configured.");
+    const error = new Error("GENLOOK_API_KEY is not configured.");
+    error.code = "GENLOOK_API_KEY_MISSING";
+    throw error;
   }
 
   if (!userPhotoBase64) {
