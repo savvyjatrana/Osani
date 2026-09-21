@@ -228,45 +228,94 @@ exports.retryPushOrder = onCall(
  * Response: { imageBase64: string, mimeType: string }
  */
 exports.generateTryOnImage = onCall(
-  { secrets: [GENLOOK_API_KEY], timeoutSeconds: 120, memory: "512MiB" },
+  {
+    secrets: [GENLOOK_API_KEY],
+    timeoutSeconds: 180,
+    memory: "512MiB",
+  },
   async (request) => {
-    const { productId, userPhotoBase64, userPhotoMimeType } = request.data || {};
+    const {
+      productId,
+      userPhotoBase64,
+      userPhotoMimeType,
+    } = request.data || {};
+
     if (!productId || !userPhotoBase64) {
-      throw new HttpsError("invalid-argument", "productId and userPhotoBase64 are required");
+      throw new HttpsError(
+        "invalid-argument",
+        "productId and userPhotoBase64 are required"
+      );
     }
 
     try {
-      const productSnap = await admin.firestore().collection("products").doc(productId).get();
+      const productSnap = await admin
+        .firestore()
+        .collection("products")
+        .doc(productId)
+        .get();
+
       if (!productSnap.exists) {
-        throw new HttpsError("not-found", `No product found with id "${productId}".`);
+        throw new HttpsError(
+          "not-found",
+          `No product found with id "${productId}".`
+        );
       }
 
       const product = productSnap.data();
-      if (!product.img) {
-        throw new HttpsError("failed-precondition", "This product has no image to try on.");
-      }
+      const productImageUrl = product.img;
 
-      // Genlook accepts a public product image URL directly. This is better
-      // than downloading the product image into the Cloud Function first.
-      try {
-        return await tryon.generateTryOn(GENLOOK_API_KEY.value(), {
-          userPhotoBase64,
-          userPhotoMimeType: userPhotoMimeType || "image/jpeg",
-          productImageUrl: product.img,
-          productTitle: product.title,
-          productId,
-        });
-      } catch (err) {
-        console.error(`Genlook try-on generation failed for ${productId}:`, err);
+      if (!productImageUrl) {
         throw new HttpsError(
-          "internal",
-          `Virtual try-on failed: ${err.message || "Unknown Genlook error"}`
+          "failed-precondition",
+          "This product has no image to try on."
         );
       }
+
+      if (!/^https:\/\//i.test(productImageUrl)) {
+        throw new HttpsError(
+          "failed-precondition",
+          "This product image is not a public HTTPS URL. Genlook must be able to fetch the product image from the internet."
+        );
+      }
+
+      console.log("OSANI Try-On product:", {
+        productId,
+        title: product.title || product.name || "OSANI Product",
+        productImageUrl,
+      });
+
+      const result = await tryon.generateTryOn(
+        GENLOOK_API_KEY.value(),
+        {
+          userPhotoBase64,
+          userPhotoMimeType: userPhotoMimeType || "image/jpeg",
+          productImageUrl,
+          productTitle:
+            product.title || product.name || "OSANI Fashion Product",
+          productDescription:
+            product.description || product.desc || "",
+          productId,
+        }
+      );
+
+      return result;
     } catch (err) {
-      console.error(`Try-on failed for product ${productId}:`, err);
-      if (err instanceof HttpsError) throw err;
-      throw new HttpsError("internal", `Unexpected try-on error: ${err.message}`);
+      console.error("OSANI Genlook Try-On Error:", {
+        code: err.code,
+        message: err.message,
+        status: err.status,
+        details: err.details,
+        requestId: err.requestId,
+      });
+
+      if (err instanceof HttpsError) {
+        throw err;
+      }
+
+      throw new HttpsError(
+        "failed-precondition",
+        `Virtual try-on failed: ${err.message || "Unknown Genlook error"}`
+      );
     }
   }
 );
