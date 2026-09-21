@@ -300,21 +300,33 @@ exports.generateTryOnImage = onCall(
 
       return result;
     } catch (err) {
+      // Log everything we have — code, status, Genlook's response body,
+      // and the stack trace — so `firebase functions:log` always shows
+      // the real cause, even if the client only ever sees a generic
+      // Firebase error code.
       console.error("OSANI Genlook Try-On Error:", {
         code: err.code,
         message: err.message,
         status: err.status,
         details: err.details,
         requestId: err.requestId,
+        stack: err.stack,
       });
 
       if (err instanceof HttpsError) {
         throw err;
       }
 
+      if (err.code === "GENLOOK_API_KEY_MISSING") {
+        throw new HttpsError(
+          "failed-precondition",
+          "AI try-on isn't configured yet — GENLOOK_API_KEY hasn't been set. Run: firebase functions:secrets:set GENLOOK_API_KEY"
+        );
+      }
+
       throw new HttpsError(
         "failed-precondition",
-        `Virtual try-on failed: ${err.message || "Unknown Genlook error"}`
+        `Virtual try-on failed${err.code ? ` (${err.code})` : ""}: ${err.message || "Unknown Genlook error"}`
       );
     }
   }
